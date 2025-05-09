@@ -1,0 +1,1 @@
+# Sample log file - this shows what actual log files will look like

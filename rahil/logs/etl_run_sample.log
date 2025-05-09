@@ -1,0 +1,13 @@
+Sample ETL Run Log - Generated on 2025-05-08 23:50:42.447635
+================================================================================
+This is a sample log file to demonstrate where ETL logs are stored.
+When you run the actual ETL process, detailed logs will be stored here.
+================================================================================
+ETL Steps:
+1. Database creation - Completed
+2. External stage creation - Completed
+3. Table creation - Completed
+4. Data loading - Completed
+5. Sample data display - Completed
+================================================================================
+ETL process completed successfully!

@@ -25,9 +25,11 @@ wheels/
 
 # Logs - keep directory but ignore log files
 *.log
-# Keep logs directory
+# Keep logs directory and sample files
 !logs/
 !logs/.gitkeep
+!logs/sample_log.txt
+!logs/etl_run_sample.log
 
 # IDE specific files
 .idea/
