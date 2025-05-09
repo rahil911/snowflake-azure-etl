@@ -1,0 +1,425 @@
+File contents will be added separately
+================================================================================
+Starting ETL process for RMH
+Database: IMT577_DW_RMH_STAGING
+================================================================================
+
+STEP 0: Creating database if not exists...
+Creating database: IMT577_DW_RMH_STAGING
+Connected to Snowflake version: 9.12.1
+Database IMT577_DW_RMH_STAGING already exists
+Schema PUBLIC created successfully
+Database setup completed!
+
+STEP 1: Creating external stages...
+Connecting to Snowflake...
+Connected to Snowflake version: 9.12.1
+Creating CSV file format...
+
+Creating stage CHANNEL_STAGE...
+Stage CHANNEL_STAGE created successfully.
+
+Creating stage CHANNELCATEGORY_STAGE...
+Stage CHANNELCATEGORY_STAGE created successfully.
+
+Creating stage CUSTOMER_STAGE...
+Stage CUSTOMER_STAGE created successfully.
+
+Creating stage PRODUCT_STAGE...
+Stage PRODUCT_STAGE created successfully.
+
+Creating stage PRODUCTCATEGORY_STAGE...
+Stage PRODUCTCATEGORY_STAGE created successfully.
+
+Creating stage PRODUCTTYPE_STAGE...
+Stage PRODUCTTYPE_STAGE created successfully.
+
+Creating stage RESELLER_STAGE...
+Stage RESELLER_STAGE created successfully.
+
+Creating stage SALESDETAIL_STAGE...
+Stage SALESDETAIL_STAGE created successfully.
+
+Creating stage SALESHEADER_STAGE...
+Stage SALESHEADER_STAGE created successfully.
+
+Creating stage STORE_STAGE...
+Stage STORE_STAGE created successfully.
+
+Creating stage TARGETDATACHANNEL_STAGE...
+Stage TARGETDATACHANNEL_STAGE created successfully.
+
+Creating stage TARGETDATAPRODUCT_STAGE...
+Stage TARGETDATAPRODUCT_STAGE created successfully.
+
+Verifying stages...
+
+Summary:
+Stages created: 12
+- CHANNEL_STAGE: ✅ Exists
+- CHANNELCATEGORY_STAGE: ✅ Exists
+- CUSTOMER_STAGE: ✅ Exists
+- PRODUCT_STAGE: ✅ Exists
+- PRODUCTCATEGORY_STAGE: ✅ Exists
+- PRODUCTTYPE_STAGE: ✅ Exists
+- RESELLER_STAGE: ✅ Exists
+- SALESDETAIL_STAGE: ✅ Exists
+- SALESHEADER_STAGE: ✅ Exists
+- STORE_STAGE: ✅ Exists
+- TARGETDATACHANNEL_STAGE: ✅ Exists
+- TARGETDATAPRODUCT_STAGE: ✅ Exists
+
+Stage creation process completed!
+
+STEP 2: Creating staging tables...
+Connecting to Snowflake...
+Connected to Snowflake version: 9.12.1
+
+Creating table 1: STAGING_CHANNEL
+Table STAGING_CHANNEL created successfully.
+
+Creating table 2: STAGING_CHANNELCATEGORY
+Table STAGING_CHANNELCATEGORY created successfully.
+
+Creating table 3: STAGING_CUSTOMER
+Table STAGING_CUSTOMER created successfully.
+
+Creating table 4: STAGING_PRODUCT
+Table STAGING_PRODUCT created successfully.
+
+Creating table 5: STAGING_PRODUCTCATEGORY
+Table STAGING_PRODUCTCATEGORY created successfully.
+
+Creating table 6: STAGING_PRODUCTTYPE
+Table STAGING_PRODUCTTYPE created successfully.
+
+Creating table 7: STAGING_RESELLER
+Table STAGING_RESELLER created successfully.
+
+Creating table 8: STAGING_STORE
+Table STAGING_STORE created successfully.
+
+Creating table 9: STAGING_SALESDETAIL
+Table STAGING_SALESDETAIL created successfully.
+
+Creating table 10: STAGING_SALESHEADER
+Table STAGING_SALESHEADER created successfully.
+
+Creating table 11: STAGING_TARGETDATACHANNEL
+Table STAGING_TARGETDATACHANNEL created successfully.
+
+Creating table 12: STAGING_TARGETDATAPRODUCT
+Table STAGING_TARGETDATAPRODUCT created successfully.
+
+Verifying tables...
+
+Summary:
+Tables created: 12
+- STAGING_CHANNEL: ✅ Exists
+- STAGING_CHANNELCATEGORY: ✅ Exists
+- STAGING_CUSTOMER: ✅ Exists
+- STAGING_PRODUCT: ✅ Exists
+- STAGING_PRODUCTCATEGORY: ✅ Exists
+- STAGING_PRODUCTTYPE: ✅ Exists
+- STAGING_RESELLER: ✅ Exists
+- STAGING_STORE: ✅ Exists
+- STAGING_SALESDETAIL: ✅ Exists
+- STAGING_SALESHEADER: ✅ Exists
+- STAGING_TARGETDATACHANNEL: ✅ Exists
+- STAGING_TARGETDATAPRODUCT: ✅ Exists
+
+Table creation process completed!
+
+STEP 3: Loading data from stages to tables...
+Connecting to Snowflake...
+Connected to Snowflake version: 9.12.1
+
+Loading data from CHANNEL_STAGE into STAGING_CHANNEL...
+Successfully loaded 5 rows into STAGING_CHANNEL
+
+Loading data from CHANNELCATEGORY_STAGE into STAGING_CHANNELCATEGORY...
+Successfully loaded 2 rows into STAGING_CHANNELCATEGORY
+
+Loading data from CUSTOMER_STAGE into STAGING_CUSTOMER...
+Successfully loaded 3 rows into STAGING_CUSTOMER
+
+Loading data from PRODUCT_STAGE into STAGING_PRODUCT...
+Successfully loaded 24 rows into STAGING_PRODUCT
+
+Loading data from PRODUCTCATEGORY_STAGE into STAGING_PRODUCTCATEGORY...
+Successfully loaded 4 rows into STAGING_PRODUCTCATEGORY
+
+Loading data from PRODUCTTYPE_STAGE into STAGING_PRODUCTTYPE...
+Successfully loaded 10 rows into STAGING_PRODUCTTYPE
+
+Loading data from RESELLER_STAGE into STAGING_RESELLER...
+Successfully loaded 4 rows into STAGING_RESELLER
+
+Loading data from SALESDETAIL_STAGE into STAGING_SALESDETAIL...
+Successfully loaded 187320 rows into STAGING_SALESDETAIL
+
+Loading data from SALESHEADER_STAGE into STAGING_SALESHEADER...
+Successfully loaded 187320 rows into STAGING_SALESHEADER
+
+Loading data from STORE_STAGE into STAGING_STORE...
+Successfully loaded 6 rows into STAGING_STORE
+
+Loading data from TARGETDATACHANNEL_STAGE into STAGING_TARGETDATACHANNEL...
+Successfully loaded 22 rows into STAGING_TARGETDATACHANNEL
+
+Loading data from TARGETDATAPRODUCT_STAGE into STAGING_TARGETDATAPRODUCT...
+Successfully loaded 48 rows into STAGING_TARGETDATAPRODUCT
+
+Data Loading Summary:
+Successful loads: 12
+- channel: 5 rows
+- channelcategory: 2 rows
+- customer: 3 rows
+- product: 24 rows
+- productcategory: 4 rows
+- producttype: 10 rows
+- reseller: 4 rows
+- salesdetail: 187320 rows
+- salesheader: 187320 rows
+- store: 6 rows
+- targetdatachannel: 22 rows
+- targetdataproduct: 48 rows
+
+Data loading process completed!
+
+STEP 4: Displaying sample data from tables...
+
+================================================================================
+SAMPLE DATA FROM STAGING TABLES IN IMT577_DW_RMH_STAGING
+================================================================================
+Connecting to Snowflake...
+Connected to Snowflake version: 9.12.1
+
+
+##################################################
+### Table: STAGING_CHANNEL
+##################################################
+
+Showing top 5 rows from STAGING_CHANNEL:
+
++-----------+-------------------+-------------------+--------------+-------------------------------+--------------+-------------------------------+
+| CHANNELID | CHANNELCATEGORYID |      CHANNEL      | CREATEDDATE  |           CREATEDBY           | MODIFIEDDATE |          MODIFIEDBY           |
++-----------+-------------------+-------------------+--------------+-------------------------------+--------------+-------------------------------+
+|     1     |         1         |     Boutiques     | 1/1/13 20:54 | company\SQLServerSalesAccount | 1/1/13 20:54 | company\SQLServerSalesAccount |
+|     2     |         1         |      On-line      | 1/1/13 20:54 | company\SQLServerSalesAccount | 1/1/13 20:54 | company\SQLServerSalesAccount |
+|     3     |         1         |      Outlet       | 1/1/13 20:54 | company\SQLServerSalesAccount | 1/1/13 20:54 | company\SQLServerSalesAccount |
+|     4     |         2         | Branded Franchise | 1/1/13 20:54 | company\SQLServerSalesAccount | 1/1/13 20:54 | company\SQLServerSalesAccount |
+|     5     |         2         | Department Stores | 1/1/13 20:54 | company\SQLServerSalesAccount | 1/1/13 20:54 | company\SQLServerSalesAccount |
++-----------+-------------------+-------------------+--------------+-------------------------------+--------------+-------------------------------+
+
+Total rows in table: 5
+
+
+##################################################
+### Table: STAGING_CHANNELCATEGORY
+##################################################
+
+Showing top 5 rows from STAGING_CHANNELCATEGORY:
+
++-------------------+-----------------+--------------+-------------------------------+--------------+------------+
+| CHANNELCATEGORYID | CHANNELCATEGORY | CREATEDDATE  |           CREATEDBY           | MODIFIEDDATE | MODIFIEDBY |
++-------------------+-----------------+--------------+-------------------------------+--------------+------------+
+|         1         |     Direct      | 1/1/13 20:54 | company\SQLServerSalesAccount |              |            |
+|         2         |    Indirect     | 1/1/13 20:54 | company\SQLServerSalesAccount |              |            |
++-------------------+-----------------+--------------+-------------------------------+--------------+------------+
+
+Total rows in table: 2
+
+
+##################################################
+### Table: STAGING_CUSTOMER
+##################################################
+
+Showing top 5 rows from STAGING_CUSTOMER:
+
++--------------------------------------+--------------+-----------+----------+--------+---------------------------+------------------+------------+---------------+---------------+------------+--------------+---------------------+-------------------------------+--------------+------------+
+|              CUSTOMERID              | SUBSEGMENTID | FIRSTNAME | LASTNAME | GENDER |       EMAILADDRESS        |     ADDRESS      |    CITY    | STATEPROVINCE |    COUNTRY    | POSTALCODE | PHONENUMBER  |     CREATEDDATE     |           CREATEDBY           | MODIFIEDDATE | MODIFIEDBY |
++--------------------------------------+--------------+-----------+----------+--------+---------------------------+------------------+------------+---------------+---------------+------------+--------------+---------------------+-------------------------------+--------------+------------+
+| 9cfbece1-de7a-4ef5-a766-43f28e7edfa2 |      5       |    Kim    |  Wanda   |   F    |    wanda.kim@email.com    |   886 East Way   | Birmingham |    Alabama    | United States |   35203    | 205-742-4100 | 2013-01-01 21:20:22 | company\SQLServerSalesAccount |              |            |
+| 5bd2fd76-c656-4a12-80b1-7a423e380fca |      5       |  Leonard  | Alvarado |   M    | leonard.alvardo@email.com | 201 South Street |  Atlanta   |    Georgia    | United States |   30304    | 404-215-3949 | 2013-01-01 21:20:22 | company\SQLServerSalesAccount |              |            |
+| 7ab04e33-c078-462b-a40d-b93e2bc0466b |      5       |   Young   |  Roger   |   M    |   roger.young@email.com   | 102 North Court  |   Tiffin   |     Ohio      | United States |   44883    | 419-695-5262 | 2013-01-01 21:20:22 | company\SQLServerSalesAccount |              |            |
++--------------------------------------+--------------+-----------+----------+--------+---------------------------+------------------+------------+---------------+---------------+------------+--------------+---------------------+-------------------------------+--------------+------------+
+
+Total rows in table: 3
+
+
+##################################################
+### Table: STAGING_PRODUCT
+##################################################
+
+Showing top 5 rows from STAGING_PRODUCT:
+
++-----------+---------------+--------------------------+--------+--------+-----------------+--------+-------+------+---------------------+-------------------------------+--------------+------------+----------------+
+| PRODUCTID | PRODUCTTYPEID |         PRODUCT          | COLOR  | STYLE  | UNITOFMEASUREID | WEIGHT | PRICE | COST |     CREATEDDATE     |           CREATEDBY           | MODIFIEDDATE | MODIFIEDBY | WHOLESALEPRICE |
++-----------+---------------+--------------------------+--------+--------+-----------------+--------+-------+------+---------------------+-------------------------------+--------------+------------+----------------+
+|     1     |       1       |          Blush           |  Red   |        |        3        |   8    | 13.95 |  5   | 2013-01-01 20:56:10 | company\SQLServerSalesAccount |              |            |       7        |
+|     2     |       1       |         Lipstick         |  Red   |        |        3        |  3.4   | 6.99  | 2.5  | 2013-01-01 20:56:10 | company\SQLServerSalesAccount |              |            |      3.5       |
+|     3     |       2       |    Amytheyst Necklace    | purple |        |        3        |   12   | 24.95 |  5   | 2013-01-01 20:56:10 | company\SQLServerSalesAccount |              |            |      12.5      |
+|     6     |       3       |   Blue Onesie Pajamas    |  Blue  | Onesie |        1        |  0.43  | 5.99  |  2   | 2013-01-01 20:56:10 | company\SQLServerSalesAccount |              |            |       3        |
+|     7     |       3       | Thomas the Train Pajamas |  Blue  | Onesie |        1        |  0.53  | 6.99  | 2.5  | 2013-01-01 20:56:10 | company\SQLServerSalesAccount |              |            |      3.5       |
++-----------+---------------+--------------------------+--------+--------+-----------------+--------+-------+------+---------------------+-------------------------------+--------------+------------+----------------+
+
+Total rows in table: 20
+
+
+##################################################
+### Table: STAGING_PRODUCTCATEGORY
+##################################################
+
+Showing top 5 rows from STAGING_PRODUCTCATEGORY:
+
++-------------------+--------------------+---------------------+-------------------------------+--------------+------------+
+| PRODUCTCATEGORYID |  PRODUCTCATEGORY   |     CREATEDDATE     |           CREATEDBY           | MODIFIEDDATE | MODIFIEDBY |
++-------------------+--------------------+---------------------+-------------------------------+--------------+------------+
+|         1         |    Accessories     | 2013-01-01 20:55:20 | company\SQLServerSalesAccount |              |            |
+|         2         | Children's Apparel | 2013-01-01 20:55:20 | company\SQLServerSalesAccount |              |            |
+|         3         |  Women's Apparel   | 2013-01-01 20:55:20 | company\SQLServerSalesAccount |              |            |
+|         4         |   Men's Apparel    | 2013-01-01 20:55:20 | company\SQLServerSalesAccount |              |            |
++-------------------+--------------------+---------------------+-------------------------------+--------------+------------+
+
+Total rows in table: 4
+
+
+##################################################
+### Table: STAGING_PRODUCTTYPE
+##################################################
+
+Showing top 5 rows from STAGING_PRODUCTTYPE:
+
++---------------+-------------------+-------------+---------------------+-------------------------------+--------------+------------+
+| PRODUCTTYPEID | PRODUCTCATEGORYID | PRODUCTTYPE |     CREATEDDATE     |           CREATEDBY           | MODIFIEDDATE | MODIFIEDBY |
++---------------+-------------------+-------------+---------------------+-------------------------------+--------------+------------+
+|       1       |         1         |  Cosmetics  | 2013-01-01 20:55:47 | company\SQLServerSalesAccount |              |            |
+|       2       |         1         |   Jewelry   | 2013-01-01 20:55:47 | company\SQLServerSalesAccount |              |            |
+|       3       |         2         |  Baby 0-2   | 2013-01-01 20:55:47 | company\SQLServerSalesAccount |              |            |
+|       4       |         2         |  Kids 2-6   | 2013-01-01 20:55:47 | company\SQLServerSalesAccount |              |            |
+|       5       |         2         |  Kids 7-14  | 2013-01-01 20:55:47 | company\SQLServerSalesAccount |              |            |
++---------------+-------------------+-------------+---------------------+-------------------------------+--------------+------------+
+
+Total rows in table: 10
+
+
+##################################################
+### Table: STAGING_RESELLER
+##################################################
+
+Showing top 5 rows from STAGING_RESELLER:
+
++--------------------------------------+-----------------+---------------------------+------------------------+--------------+---------------+---------------+------------+--------------+---------------------+-------------------------------+--------------+------------+--------------------------+
+|              RESELLERID              |     CONTACT     |       EMAILADDRESS        |        ADDRESS         |     CITY     | STATEPROVINCE |    COUNTRY    | POSTALCODE | PHONENUMBER  |     CREATEDDATE     |           CREATEDBY           | MODIFIEDDATE | MODIFIEDBY |       RESELLERNAME       |
++--------------------------------------+-----------------+---------------------------+------------------------+--------------+---------------+---------------+------------+--------------+---------------------+-------------------------------+--------------+------------+--------------------------+
+| d56ef891-cbfa-4659-a44a-169aafb00587 |   Charles Kim   |   charles.kim@email.com   | 10437 Retailer Avenue  |   Jackson    |  Mississippi  | United States |   39203    | 601-425-0639 | 2013-01-01 20:43:18 | company\SQLServerSalesAccount |              |            | Mississipi Distributors  |
+| 5be7aa4a-70b8-4515-88ba-b78395ff9710 |   Ralph Smith   |     rsmith@email.com      |     1733 2nd St S      |   Meridian   |  Mississippi  | United States |   39301    | 601-485-2250 | 2013-01-01 20:43:18 | company\SQLServerSalesAccount |              |            |   Walmart Supercenter    |
+| 10418299-2934-4ca3-b368-d0dfcde58a51 | Chelsea Douglas | chelsea.douglas@email.com | 100 Big Retailer Court | Indianapolis |    Indiana    | United States |   46204    | 317-969-8119 | 2013-01-01 20:43:18 | company\SQLServerSalesAccount |              |            | Indiana Department Store |
+| 9c9706cb-9102-43c4-9e5a-dd38502a1284 |  Joel Shelton   |    jshelton@email.com     |  3450 Wrightsboro Rd   |   Augusta    |    Georgia    | United States |   30909    | 706-731-8850 | 2013-01-01 20:43:18 | company\SQLServerSalesAccount |              |            |    Georgia Mega Store    |
++--------------------------------------+-----------------+---------------------------+------------------------+--------------+---------------+---------------+------------+--------------+---------------------+-------------------------------+--------------+------------+--------------------------+
+
+Total rows in table: 4
+
+
+##################################################
+### Table: STAGING_SALESDETAIL
+##################################################
+
+Showing top 5 rows from STAGING_SALESDETAIL:
+
++---------------+---------------+-----------+---------------+-------------+--------------+-------------------------------+--------------+------------+
+| SALESDETAILID | SALESHEADERID | PRODUCTID | SALESQUANTITY | SALESAMOUNT | CREATEDDATE  |           CREATEDBY           | MODIFIEDDATE | MODIFIEDBY |
++---------------+---------------+-----------+---------------+-------------+--------------+-------------------------------+--------------+------------+
+|       1       |       1       |     1     |      30       |    418.5    | 1/1/13 22:12 | company\SQLServerSalesAccount |              |            |
+|       2       |       2       |     9     |      14       |   111.86    | 1/1/13 22:12 | company\SQLServerSalesAccount |              |            |
+|       3       |       3       |    23     |      41       |   1637.95   | 1/1/13 22:12 | company\SQLServerSalesAccount |              |            |
+|       4       |       4       |     1     |      30       |    418.5    | 1/1/13 22:12 | company\SQLServerSalesAccount |              |            |
+|       5       |       5       |    10     |      14       |   111.86    | 1/1/13 22:12 | company\SQLServerSalesAccount |              |            |
++---------------+---------------+-----------+---------------+-------------+--------------+-------------------------------+--------------+------------+
+
+Total rows in table: 187,320
+
+
+##################################################
+### Table: STAGING_SALESHEADER
+##################################################
+
+Showing top 5 rows from STAGING_SALESHEADER:
+
++---------------+--------+-----------+---------+--------------------------------------+------------+--------------+-------------------------------+--------------+------------+
+| SALESHEADERID |  DATE  | CHANNELID | STOREID |              CUSTOMERID              | RESELLERID | CREATEDDATE  |           CREATEDBY           | MODIFIEDDATE | MODIFIEDBY |
++---------------+--------+-----------+---------+--------------------------------------+------------+--------------+-------------------------------+--------------+------------+
+|       1       | 1/1/13 |     2     |         | 7ab04e33-c078-462b-a40d-b93e2bc0466b |            | 1/1/13 22:12 | company\SQLServerSalesAccount |              |            |
+|       2       | 1/1/13 |     2     |         | 5bd2fd76-c656-4a12-80b1-7a423e380fca |            | 1/1/13 22:12 | company\SQLServerSalesAccount |              |            |
+|       3       | 1/1/13 |     2     |         | 7ab04e33-c078-462b-a40d-b93e2bc0466b |            | 1/1/13 22:12 | company\SQLServerSalesAccount |              |            |
+|       4       | 1/1/13 |     2     |         | 7ab04e33-c078-462b-a40d-b93e2bc0466b |            | 1/1/13 22:12 | company\SQLServerSalesAccount |              |            |
+|       5       | 1/1/13 |     2     |         | 7ab04e33-c078-462b-a40d-b93e2bc0466b |            | 1/1/13 22:12 | company\SQLServerSalesAccount |              |            |
++---------------+--------+-----------+---------+--------------------------------------+------------+--------------+-------------------------------+--------------+------------+
+
+Total rows in table: 187,320
+
+
+##################################################
+### Table: STAGING_STORE
+##################################################
+
+Showing top 5 rows from STAGING_STORE:
+
++---------+--------------+-------------+-----------------+--------------------+-------------+---------------+---------------+------------+--------------+--------------+-------------------------------+--------------+------------+
+| STOREID | SUBSEGMENTID | STORENUMBER |  STOREMANAGER   |      ADDRESS       |    CITY     | STATEPROVINCE |    COUNTRY    | POSTALCODE | PHONENUMBER  | CREATEDDATE  |           CREATEDBY           | MODIFIEDDATE | MODIFIEDBY |
++---------+--------------+-------------+-----------------+--------------------+-------------+---------------+---------------+------------+--------------+--------------+-------------------------------+--------------+------------+
+|    1    |      1       |      5      | Freida Williams | 90021 State Street |   Atlanta   |    Georgia    | United States |   30301    | 404-902-1067 | 1/1/13 21:23 | company\SQLServerSalesAccount |              |            |
+|    2    |      2       |     34      | Michelle Miller | 16371 14th Street  |  St Louis   |   Missouri    | United States |   63103    | 557-704-9940 | 1/1/13 21:23 | company\SQLServerSalesAccount |              |            |
+|    3    |      2       |     39      |   Keith Chum    | 16205 138th Street |   Jackson   |  Mississippi  | United States |   39201    | 601-250-4658 | 1/1/13 21:23 | company\SQLServerSalesAccount |              |            |
+|    4    |      3       |     21      |   Mark Weber    |  8365 10th Avenue  | Bentonville |   Arkansas    | United States |   72716    | 479-950-6646 | 1/1/13 21:23 | company\SQLServerSalesAccount |              |            |
+|    5    |      4       |      8      |   James Trunk   |  437 Main Avenue   | Little Rock |   Arkansas    | United States |   72202    | 501-168-3940 | 1/1/13 21:23 | company\SQLServerSalesAccount |              |            |
++---------+--------------+-------------+-----------------+--------------------+-------------+---------------+---------------+------------+--------------+--------------+-------------------------------+--------------+------------+
+
+Total rows in table: 6
+
+
+##################################################
+### Table: STAGING_TARGETDATACHANNEL
+##################################################
+
+Showing top 5 rows from STAGING_TARGETDATACHANNEL:
+
++------+-------------------+--------------------------+-------------------+
+| YEAR |    CHANNELNAME    |        TARGETNAME        | TARGETSALESAMOUNT |
++------+-------------------+--------------------------+-------------------+
+| 2013 | Department Stores | Indiana Department Store |     405500000     |
+| 2013 | Department Stores |   Walmart Supercenter    |      7500000      |
+| 2013 | Branded Franchise | Mississippi Distributors |     400000000     |
+| 2013 | Branded Franchise |    Georgia Mega Store    |     60500000      |
+| 2013 |      Online       |      Customer Sales      |     135500250     |
++------+-------------------+--------------------------+-------------------+
+
+Total rows in table: 22
+
+
+##################################################
+### Table: STAGING_TARGETDATAPRODUCT
+##################################################
+
+Showing top 5 rows from STAGING_TARGETDATAPRODUCT:
+
++-----------+---------------------+------+---------------------+
+| PRODUCTID |       PRODUCT       | YEAR | SALESQUANTITYTARGET |
++-----------+---------------------+------+---------------------+
+|     3     | Amytheyst Necklace  | 2013 |       1346000       |
+|     3     | Amytheyst Necklace  | 2014 |       1450000       |
+|    13     |       Blouse        | 2013 |       2325000       |
+|    13     |       Blouse        | 2014 |       2500000       |
+|     6     | Blue Onesie Pajamas | 2013 |       630750        |
++-----------+---------------------+------+---------------------+
+
+Total rows in table: 48
+
+================================================================================
+Sample data retrieval completed!
+================================================================================
+
+================================================================================
+ETL process completed successfully!
+================================================================================
