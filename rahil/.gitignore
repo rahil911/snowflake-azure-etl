@@ -23,9 +23,11 @@ wheels/
 .installed.cfg
 *.egg
 
-# Logs
+# Logs - keep directory but ignore log files
 *.log
-logs/
+# Keep logs directory
+!logs/
+!logs/.gitkeep
 
 # IDE specific files
 .idea/
