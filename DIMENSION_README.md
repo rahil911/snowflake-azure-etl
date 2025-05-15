@@ -31,6 +31,33 @@ The dimensional model follows a star schema design with these components:
 - **Fact_ProductSalesTarget**: Product sales targets
 - **Fact_SRCSalesTarget**: Store/Reseller/Channel sales targets
 
+## Data Quality Enhancements
+
+This implementation includes several data quality and robustness enhancements:
+
+### 1. Unknown Member Handling
+- Each dimension table has a designated "Unknown" record (e.g., "Unknown Customer", "Unknown Product") 
+- These records are automatically inserted during dimension table creation
+- Fact tables reference these unknown members when source data contains NULL values or missing references
+- This ensures no orphaned facts or broken references in the dimensional model
+
+### 2. Data Type Handling
+- Special handling for UUID-style identifiers (CustomerID, ResellerID) using VARCHAR(255) instead of INT
+- Proper type casting between numeric and string formats for fields like PostalCode
+- Consistent type conversion in JOIN conditions to prevent type mismatch errors
+
+### 3. NULL Value Protection
+- Comprehensive use of COALESCE functions to replace NULL values with appropriate defaults
+- LEFT JOIN operations instead of INNER JOIN to preserve records with missing data
+- WHERE clauses that filter out completely invalid records while keeping partially valid ones
+- Default values defined for all fields to prevent NULL handling issues
+
+### 4. Error Handling and Prevention
+- Division by zero protection in calculated fields (unit price, profit margins, etc.)
+- Data validation filters at each stage of the ETL process
+- Detailed error reporting with specific exception messages
+- Transaction handling to prevent partial loads
+
 ## Setup Instructions
 
 1. **Install required packages**:
@@ -127,6 +154,22 @@ The ETL process follows this data flow:
 3. **Star Schema**: The design follows a pure star schema for simplicity and query performance
 4. **Profit Calculations**: Pre-calculated profit metrics are stored in dimension and fact tables
 5. **Date Keys**: Date keys are stored in YYYYMMDD format for easy reference
+6. **Type Flexibility**: Data type selection optimized for heterogeneous source data (e.g., VARCHAR for IDs)
+7. **No Hard Constraints**: Foreign key constraints implemented logically rather than enforced by the database, allowing for more flexible data loading
+
+## Implementation Details
+
+### Dimension Tables Implementation
+- Each dimension includes both business keys and surrogate keys
+- Consistent naming conventions for all tables and columns
+- Default "Unknown" members in all dimensions to handle NULLs and missing data
+- Properly derived attributes like profit calculations and full names
+
+### Fact Tables Implementation
+- Surrogate key references to all dimensions
+- Measures isolated from dimensions for proper star schema design
+- Aggregatable measures with consistent data types
+- Derived measures pre-calculated during load for query performance
 
 ## Logging System
 
@@ -151,9 +194,14 @@ Log files are named with timestamps (e.g., `dim_etl_run_20250508_233839.log`) fo
 - Check that the staging tables have the expected structure
 - Verify the staging database name matches the configuration
 
-### Permission Errors
-- Make sure your Snowflake role has CREATE DATABASE privileges
-- Check that you have permissions to create tables and load data
+### Data Type Mismatch Issues
+- If you encounter data type errors, check the source data for unexpected formats
+- The ETL handles most common type conversions automatically
+- For CustomerID or ResellerID issues, verify they follow UUID format as expected
+
+### NULL or Missing Data Errors
+- The implementation handles NULLs with default "Unknown" dimension members
+- If specific error messages mention NULL values, check the source data quality
 
 ## Security Notes
 
