@@ -38,7 +38,10 @@ if not all([SNOWFLAKE_ACCOUNT, SNOWFLAKE_USER, SNOWFLAKE_PASSWORD]):
     sys.exit(1)
 
 # Azure Blob Storage
-AZURE_STORAGE_ACCOUNT = os.getenv("AZURE_STORAGE_ACCOUNT", "sp72storage.blob.core.windows.net")
+AZURE_STORAGE_ACCOUNT = os.getenv("AZURE_STORAGE_ACCOUNT")
+if not AZURE_STORAGE_ACCOUNT:
+    print("ERROR: AZURE_STORAGE_ACCOUNT not found in .env file")
+    sys.exit(1)
 
 # Entities list - all entities to process in the ETL pipeline
 ENTITIES = [
