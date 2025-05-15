@@ -25,6 +25,8 @@ wheels/
 
 # Logs - keep directory but ignore log files
 *.log
+# Except for specific ETL log examples
+!logs/*.log
 # Keep logs directory
 !logs/
 !logs/.gitkeep
