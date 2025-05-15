@@ -75,7 +75,7 @@ This ETL pipeline processes 12 entities:
    USER_NAME=YOUR_NAME_HERE
    
    # Azure Storage account
-   AZURE_STORAGE_ACCOUNT=sp72storage.blob.core.windows.net
+   AZURE_STORAGE_ACCOUNT=your_storage_account.blob.core.windows.net
    ```
 
 ## Running the ETL Process
@@ -132,10 +132,10 @@ The process begins by checking if your database exists. If not, it creates a new
 ### 2. External Stages (Step 1)
 For each of the 12 entities, the system creates an external stage in Snowflake that points to the corresponding blob in Azure Blob Storage. The URL pattern used is:
 ```
-azure://sp72storage.blob.core.windows.net/{entity}
+azure://{your_storage_account}.blob.core.windows.net/{entity}
 ```
 
-For example, the CHANNEL_STAGE points to `azure://sp72storage.blob.core.windows.net/channel`
+For example, the CHANNEL_STAGE points to `azure://{your_storage_account}.blob.core.windows.net/channel`
 
 ### 3. Table Creation (Step 2)
 The system creates 12 staging tables with schemas specifically designed for each entity. Each table's schema includes all necessary columns with appropriate data types.
