@@ -331,6 +331,8 @@ For advanced customizations:
 3. Your custom models will override the defaults
 4. Generate migrations to apply your changes
 
+For more customization examples see [SCHEMA_CUSTOMIZATION.md](SCHEMA_CUSTOMIZATION.md).
+
 ## Troubleshooting
 
 ### Connection Issues

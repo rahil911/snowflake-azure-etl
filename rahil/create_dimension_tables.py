@@ -3,12 +3,14 @@
 Create dimension tables for the dimensional model
 """
 import snowflake.connector
+from sqlalchemy.schema import CreateTable
 from tabulate import tabulate
 from .dim_config import (
-    SNOWFLAKE_ACCOUNT, SNOWFLAKE_USER, SNOWFLAKE_PASSWORD, 
+    SNOWFLAKE_ACCOUNT, SNOWFLAKE_USER, SNOWFLAKE_PASSWORD,
     SNOWFLAKE_WAREHOUSE, SNOWFLAKE_ROLE, DIMENSION_DB_NAME,
     SNOWFLAKE_SCHEMA
 )
+from .schemas.dimension import DimensionBase
 
 def create_dimension_tables():
     """Create dimension tables for the dimensional model"""
@@ -28,97 +30,11 @@ def create_dimension_tables():
         
         # Create a cursor object
         cursor = conn.cursor()
-        
-        # Create Dim_Date table
-        # This will be created using the DIM_DATE.sql file separately
-        # so we don't need to create it here.
-        
-        # Create Dim_Product table
-        print("\nCreating Dim_Product table...")
-        cursor.execute("""
-        CREATE OR REPLACE TABLE Dim_Product (
-            DimProductID INT IDENTITY(1,1) PRIMARY KEY,
-            ProductID INT,
-            ProductTypeID INT,
-            ProductCategoryID INT,
-            ProductName VARCHAR(255),
-            ProductType VARCHAR(255),
-            ProductCategory VARCHAR(255),
-            ProductRetailPrice FLOAT,
-            ProductWholesalePrice FLOAT,
-            ProductCost FLOAT,
-            ProductRetailProfit FLOAT,
-            ProductWholesaleUnitProfit FLOAT,
-            ProductProfitMarginUnitPercent FLOAT
-        )
-        """)
-        
-        # Create Dim_Store table
-        print("Creating Dim_Store table...")
-        cursor.execute("""
-        CREATE OR REPLACE TABLE Dim_Store (
-            DimStoreID INT IDENTITY(1,1) PRIMARY KEY,
-            StoreID INT,
-            DimLocationID INT,
-            SourceStoreID INT,
-            StoreName VARCHAR(255),
-            StoreNumber VARCHAR(255),
-            StoreManager VARCHAR(255)
-        )
-        """)
-        
-        # Create Dim_Reseller table
-        print("Creating Dim_Reseller table...")
-        cursor.execute("""
-        CREATE OR REPLACE TABLE Dim_Reseller (
-            DimResellerID INT IDENTITY(1,1) PRIMARY KEY,
-            ResellerID VARCHAR(255),
-            DimLocationID INT,
-            ResellerName VARCHAR(255),
-            ContactName VARCHAR(255),
-            PhoneNumber VARCHAR(255),
-            Email VARCHAR(255)
-        )
-        """)
-        
-        # Create Dim_Location table
-        print("Creating Dim_Location table...")
-        cursor.execute("""
-        CREATE OR REPLACE TABLE Dim_Location (
-            DimLocationID INT IDENTITY(1,1) PRIMARY KEY,
-            Address VARCHAR(255),
-            City VARCHAR(255),
-            PostalCode VARCHAR(255),
-            State_Province VARCHAR(255),
-            Country VARCHAR(255)
-        )
-        """)
-        
-        # Create Dim_Customer table
-        print("Creating Dim_Customer table...")
-        cursor.execute("""
-        CREATE OR REPLACE TABLE Dim_Customer (
-            DimCustomerID INT IDENTITY(1,1) PRIMARY KEY,
-            CustomerID VARCHAR(255),
-            DimLocationID INT,
-            CustomerFullName VARCHAR(255),
-            CustomerFirstName VARCHAR(255),
-            CustomerLastName VARCHAR(255),
-            CustomerGender VARCHAR(255)
-        )
-        """)
-        
-        # Create Dim_Channel table
-        print("Creating Dim_Channel table...")
-        cursor.execute("""
-        CREATE OR REPLACE TABLE Dim_Channel (
-            DimChannelID INT IDENTITY(1,1) PRIMARY KEY,
-            ChannelID INT,
-            ChannelCategoryID INT,
-            ChannelName VARCHAR(255),
-            ChannelCategory VARCHAR(255)
-        )
-        """)
+
+        # Create tables using SQLAlchemy models
+        for table in DimensionBase.metadata.sorted_tables:
+            print(f"Creating {table.name} table...")
+            cursor.execute(str(CreateTable(table)))
         
         # Add "Unknown" members to dimension tables for handling NULL references
         print("\nAdding unknown members to dimension tables...")
