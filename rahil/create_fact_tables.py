@@ -3,12 +3,14 @@
 Create fact tables for the dimensional model
 """
 import snowflake.connector
+from sqlalchemy.schema import CreateTable
 from tabulate import tabulate
 from .dim_config import (
-    SNOWFLAKE_ACCOUNT, SNOWFLAKE_USER, SNOWFLAKE_PASSWORD, 
+    SNOWFLAKE_ACCOUNT, SNOWFLAKE_USER, SNOWFLAKE_PASSWORD,
     SNOWFLAKE_WAREHOUSE, SNOWFLAKE_ROLE, DIMENSION_DB_NAME,
     SNOWFLAKE_SCHEMA
 )
+from .schemas.fact import FactBase
 
 def create_fact_tables():
     """Create fact tables for the dimensional model"""
@@ -28,49 +30,11 @@ def create_fact_tables():
         
         # Create a cursor object
         cursor = conn.cursor()
-        
-        # Create Fact_SalesActual table
-        print("\nCreating Fact_SalesActual table...")
-        cursor.execute("""
-        CREATE OR REPLACE TABLE Fact_SalesActual (
-            DimProductID INT,
-            DimStoreID INT,
-            DimResellerID INT,
-            DimCustomerID INT,
-            DimChannelID INT,
-            DimSaleDateID INT,
-            DimLocationID INT,
-            SalesHeaderID INT,
-            SalesDetailID INT,
-            SaleAmount FLOAT,
-            SaleQuantity INT,
-            SaleUnitPrice FLOAT,
-            SaleExtendedCost FLOAT,
-            SaleTotalProfit FLOAT
-        )
-        """)
-        
-        # Create Fact_ProductSalesTarget table
-        print("Creating Fact_ProductSalesTarget table...")
-        cursor.execute("""
-        CREATE OR REPLACE TABLE Fact_ProductSalesTarget (
-            DimProductID INT,
-            DimTargetDateID INT,
-            ProductTargetSalesQuantity INT
-        )
-        """)
-        
-        # Create Fact_SRCSalesTarget table (Store/Reseller/Channel Sales Target)
-        print("Creating Fact_SRCSalesTarget table...")
-        cursor.execute("""
-        CREATE OR REPLACE TABLE Fact_SRCSalesTarget (
-            DimStoreID INT,
-            DimResellerID INT,
-            DimChannelID INT,
-            DimTargetDateID INT,
-            SalesTargetAmount FLOAT
-        )
-        """)
+
+        # Create tables using SQLAlchemy models
+        for table in FactBase.metadata.sorted_tables:
+            print(f"Creating {table.name} table...")
+            cursor.execute(str(CreateTable(table)))
         
         # Show tables to verify creation
         cursor.execute("SHOW TABLES")

@@ -13,6 +13,7 @@ from .load_dimension_tables import load_dimension_tables
 from .create_fact_tables import create_fact_tables
 from .load_fact_tables import load_fact_tables
 from .dim_config import DIMENSION_DB_NAME
+import subprocess
 
 def run_dimensional_etl():
     """Run the dimensional model ETL process"""
@@ -27,6 +28,13 @@ def run_dimensional_etl():
     if not create_dimension_database():
         print("\n❌ ETL process aborted due to error in step 0")
         sys.exit(1)
+
+    # Apply migrations for dimension and fact tables
+    print("\nSTEP 1: Applying migrations...")
+    try:
+        subprocess.run(["alembic", "upgrade", "head"], check=True)
+    except Exception as e:
+        print(f"WARNING: Alembic migration failed: {e}")
     
     # Step 1: Create Dimension Tables
     if not create_dimension_tables():
