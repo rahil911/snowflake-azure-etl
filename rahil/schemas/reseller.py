@@ -1,7 +1,9 @@
+"""SQLAlchemy model for the STAGING_RESELLER table."""
 from sqlalchemy import Column, Integer, String
 from . import Base
 
 class Reseller(Base):
+    """Staging table storing reseller information."""
     __tablename__ = "STAGING_RESELLER"
 
     RESELLERID = Column(String, primary_key=True)

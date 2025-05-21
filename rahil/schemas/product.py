@@ -1,7 +1,9 @@
+"""SQLAlchemy model for the STAGING_PRODUCT table."""
 from sqlalchemy import Column, Integer, String
 from . import Base
 
 class Product(Base):
+    """Staging table storing product information."""
     __tablename__ = "STAGING_PRODUCT"
 
     PRODUCTID = Column(Integer, primary_key=True)
