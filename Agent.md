@@ -7,7 +7,6 @@
 - Ask clarifying questions when tasks are unclear.
 -->
 
-All Tasks to finish in 1 go:
 
 # Schema Management Enhancement Plan
 
