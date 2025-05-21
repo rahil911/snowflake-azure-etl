@@ -146,6 +146,9 @@ Data is loaded from the external stages into the corresponding staging tables us
 ### 5. Sample Data Display (Step 4)
 As a verification step, the system displays the top 5 rows from each table in a nicely formatted table, along with the total row count. This helps verify that the data was loaded correctly and has the expected structure.
 
+## Schema Management with Alembic
+The table schemas are implemented with SQLAlchemy models located in `rahil/schemas` and versioned using Alembic. When the ETL process runs, migrations are applied automatically to keep the database schema in sync.
+
 ## Logging System
 
 All output from the ETL process is captured in log files stored in the `rahil/logs/` directory. These logs include:
@@ -171,7 +174,7 @@ The system will automatically create and use the database `IMT577_DW_VERO_SMITH_
 If you need to process different entities, modify the ENTITIES list in the `config.py` file.
 
 ### Changing Table Schemas
-Table schemas are defined in the `create_tables.py` file. You can modify the table creation SQL statements if needed.
+Table schemas are defined using SQLAlchemy models in `rahil/schemas`. Update these models to modify the schema. After changes, create a new Alembic migration to version the database.
 
 ## Troubleshooting
 

@@ -4,6 +4,7 @@ Main ETL runner script - executes all ETL steps in sequence
 """
 import sys
 import time
+import subprocess
 from . import config
 from .create_database import create_database
 from .create_stages import create_stages
@@ -26,23 +27,28 @@ def run_etl():
         create_database()
         time.sleep(1)
         
-        # Step 1: Create stages
-        print("\nSTEP 1: Creating external stages...")
+        # Step 1: Run database migrations
+        print("\nSTEP 1: Applying migrations...")
+        subprocess.run(["alembic", "upgrade", "head"], check=True)
+        time.sleep(1)
+
+        # Step 2: Create stages
+        print("\nSTEP 2: Creating external stages...")
         create_stages()
         time.sleep(1)
-        
-        # Step 2: Create tables
-        print("\nSTEP 2: Creating staging tables...")
+
+        # Step 3: Create tables
+        print("\nSTEP 3: Creating staging tables...")
         create_staging_tables()
         time.sleep(1)
-        
-        # Step 3: Load data
-        print("\nSTEP 3: Loading data from stages to tables...")
+
+        # Step 4: Load data
+        print("\nSTEP 4: Loading data from stages to tables...")
         load_data_from_stages()
         time.sleep(1)
-        
-        # Step 4: Display sample data
-        print("\nSTEP 4: Displaying sample data from tables...")
+
+        # Step 5: Display sample data
+        print("\nSTEP 5: Displaying sample data from tables...")
         view_sample_data()
         
         print("\n" + "=" * 80)
