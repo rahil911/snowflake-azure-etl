@@ -4,10 +4,36 @@ from sqlalchemy import engine_from_config
 from sqlalchemy import pool
 
 from alembic import context
+from alembic.ddl.impl import DefaultImpl
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
+
+# Load environment and project settings for Snowflake connection
+import os, sys
+from pathlib import Path
+from dotenv import load_dotenv
+
+# Load .env from the rahil package directory
+env_path = Path(__file__).parent.parent / "rahil" / ".env"
+if not env_path.exists():
+    raise FileNotFoundError(f".env file not found at {env_path}")
+load_dotenv(dotenv_path=env_path)
+
+# Ensure project root is in Python path for imports
+sys.path.insert(0, str(Path(__file__).parent.parent))
+
+# Import project config
+import rahil.config as project_config
+
+# Construct Snowflake SQLAlchemy URL and override alembic setting
+alembic_url = (
+    f"snowflake://{project_config.SNOWFLAKE_USER}:{project_config.SNOWFLAKE_PASSWORD}@"
+    f"{project_config.SNOWFLAKE_ACCOUNT}/{project_config.DATABASE_NAME}/{project_config.SNOWFLAKE_SCHEMA}"
+    f"?warehouse={project_config.SNOWFLAKE_WAREHOUSE}&role={project_config.SNOWFLAKE_ROLE}"
+)
+config.set_main_option("sqlalchemy.url", alembic_url)
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.
@@ -16,15 +42,16 @@ if config.config_file_name is not None:
 
 # add your model's MetaData object here
 # for 'autogenerate' support
-# from myapp import mymodel
-# target_metadata = mymodel.Base.metadata
-target_metadata = None
+from rahil.schemas import Base
+target_metadata = Base.metadata
 
 # other values from the config, defined by the needs of env.py,
 # can be acquired:
 # my_important_option = config.get_main_option("my_important_option")
 # ... etc.
 
+class SnowflakeImpl(DefaultImpl):
+    __dialect__ = "snowflake"
 
 def run_migrations_offline() -> None:
     """Run migrations in 'offline' mode.
