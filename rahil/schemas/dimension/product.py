@@ -1,6 +1,6 @@
 """Dim_Product dimension table."""
 from sqlalchemy import Column, Integer, String, Float
-from . import DimensionBase
+from .. import DimensionBase
 
 class DimProduct(DimensionBase):
     """SQLAlchemy model for the Dim_Product table."""

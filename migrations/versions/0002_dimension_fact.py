@@ -1,7 +1,7 @@
 """add dimension and fact tables"""
 from alembic import op
 import sqlalchemy as sa
-from rahil.schemas.dimension import DimensionBase
+from rahil.schemas import DimensionBase
 from rahil.schemas.fact import FactBase
 from sqlalchemy.schema import CreateTable
 

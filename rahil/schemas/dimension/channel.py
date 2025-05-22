@@ -1,6 +1,6 @@
 """Dim_Channel dimension table."""
 from sqlalchemy import Column, Integer, String
-from . import DimensionBase
+from .. import DimensionBase
 
 class DimChannel(DimensionBase):
     """SQLAlchemy model for the Dim_Channel table."""

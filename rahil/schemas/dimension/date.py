@@ -1,6 +1,6 @@
 """Dim_Date dimension table (simplified)."""
 from sqlalchemy import Column, Integer, String, Date
-from . import DimensionBase
+from .. import DimensionBase
 
 class DimDate(DimensionBase):
     """SQLAlchemy model for the Dim_Date table."""

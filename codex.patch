@@ -1,0 +1,1027 @@
+diff --git a/.gitignore b/.gitignore
+new file mode 100644
+index 0000000..cbe8300
+--- /dev/null
++++ b/.gitignore
+@@ -0,0 +1,6 @@
++__pycache__/
++*.py[cod]
++.venv/
++.env
++logs/
++.schema_customizations/
+diff --git a/README.md b/README.md
+index ab43ac4..ff2658c 100644
+--- a/README.md
++++ b/README.md
+@@ -124,76 +124,79 @@ You can also run each step separately if needed:
+    python -m rahil.view_sample_data
+    ```
+ 
+ ## How the ETL Process Works
+ 
+ ### 1. Database Creation (Step 0)
+ The process begins by checking if your database exists. If not, it creates a new Snowflake database named `IMT577_DW_{USER_NAME}_STAGING` where `{USER_NAME}` is the value from your .env file. This allows different users to have their own separate databases.
+ 
+ ### 2. External Stages (Step 1)
+ For each of the 12 entities, the system creates an external stage in Snowflake that points to the corresponding blob in Azure Blob Storage. The URL pattern used is:
+ ```
+ azure://{your_storage_account}.blob.core.windows.net/{entity}
+ ```
+ 
+ For example, the CHANNEL_STAGE points to `azure://{your_storage_account}.blob.core.windows.net/channel`
+ 
+ ### 3. Table Creation (Step 2)
+ The system creates 12 staging tables with schemas specifically designed for each entity. Each table's schema includes all necessary columns with appropriate data types.
+ 
+ ### 4. Data Loading (Step 3)
+ Data is loaded from the external stages into the corresponding staging tables using Snowflake's COPY command. The system tracks how many rows are loaded into each table.
+ 
+ ### 5. Sample Data Display (Step 4)
+ As a verification step, the system displays the top 5 rows from each table in a nicely formatted table, along with the total row count. This helps verify that the data was loaded correctly and has the expected structure.
+ 
++## Schema Management with Alembic
++The table schemas are implemented with SQLAlchemy models located in `rahil/schemas` and versioned using Alembic. When the ETL process runs, migrations are applied automatically to keep the database schema in sync.
++
+ ## Logging System
+ 
+ All output from the ETL process is captured in log files stored in the `rahil/logs/` directory. These logs include:
+ - Detailed information about each step
+ - Success/failure status for each operation
+ - Row counts for loaded data
+ - Sample data from each table
+ - Any errors encountered
+ 
+ Log files are named with timestamps (e.g., `etl_run_20250508_233839.log`) for easy reference.
+ 
+ ## Customization
+ 
+ ### Using for Different Users
+ To run this ETL process for a different user (e.g., "VERO_SMITH"), simply update the USER_NAME in your .env file:
+ ```
+ USER_NAME=VERO_SMITH
+ ```
+ 
+ The system will automatically create and use the database `IMT577_DW_VERO_SMITH_STAGING`.
+ 
+ ### Modifying the Entities List
+ If you need to process different entities, modify the ENTITIES list in the `config.py` file.
+ 
+ ### Changing Table Schemas
+-Table schemas are defined in the `create_tables.py` file. You can modify the table creation SQL statements if needed.
++Table schemas are defined using SQLAlchemy models in `rahil/schemas`. Update these models to modify the schema. After changes, create a new Alembic migration to version the database.
+ 
+ ## Troubleshooting
+ 
+ ### Connection Issues
+ - Verify your Snowflake credentials in the .env file
+ - Check that your account name is correct
+ - Ensure your warehouse and role have the necessary permissions
+ 
+ ### Missing Data
+ - Confirm that the Azure Blob Storage paths are correct
+ - Check that the blob data exists and is formatted correctly
+ - Verify file format settings in the create_stages.py file
+ 
+ ### Permission Errors
+ - Make sure your Snowflake role has CREATE DATABASE privileges
+ - Check that you have permissions to create stages, tables, and load data
+ 
+ ## Security Notes
+ 
+ This package uses `.env` for storing credentials, which provides better security by:
+ - Keeping sensitive information out of source code
+ - Allowing different users to have their own credentials
+ - Preventing credentials from being accidentally committed to version control
+ 
+ For additional security in production environments:
+diff --git a/alembic.ini b/alembic.ini
+new file mode 100644
+index 0000000..9e7365e
+--- /dev/null
++++ b/alembic.ini
+@@ -0,0 +1,119 @@
++# A generic, single database configuration.
++
++[alembic]
++# path to migration scripts
++# Use forward slashes (/) also on windows to provide an os agnostic path
++script_location = migrations
++
++# template used to generate migration file names; The default value is %%(rev)s_%%(slug)s
++# Uncomment the line below if you want the files to be prepended with date and time
++# see https://alembic.sqlalchemy.org/en/latest/tutorial.html#editing-the-ini-file
++# for all available tokens
++# file_template = %%(year)d_%%(month).2d_%%(day).2d_%%(hour).2d%%(minute).2d-%%(rev)s_%%(slug)s
++
++# sys.path path, will be prepended to sys.path if present.
++# defaults to the current working directory.
++prepend_sys_path = .
++
++# timezone to use when rendering the date within the migration file
++# as well as the filename.
++# If specified, requires the python>=3.9 or backports.zoneinfo library and tzdata library.
++# Any required deps can installed by adding `alembic[tz]` to the pip requirements
++# string value is passed to ZoneInfo()
++# leave blank for localtime
++# timezone =
++
++# max length of characters to apply to the "slug" field
++# truncate_slug_length = 40
++
++# set to 'true' to run the environment during
++# the 'revision' command, regardless of autogenerate
++# revision_environment = false
++
++# set to 'true' to allow .pyc and .pyo files without
++# a source .py file to be detected as revisions in the
++# versions/ directory
++# sourceless = false
++
++# version location specification; This defaults
++# to migrations/versions.  When using multiple version
++# directories, initial revisions must be specified with --version-path.
++# The path separator used here should be the separator specified by "version_path_separator" below.
++# version_locations = %(here)s/bar:%(here)s/bat:migrations/versions
++
++# version path separator; As mentioned above, this is the character used to split
++# version_locations. The default within new alembic.ini files is "os", which uses os.pathsep.
++# If this key is omitted entirely, it falls back to the legacy behavior of splitting on spaces and/or commas.
++# Valid values for version_path_separator are:
++#
++# version_path_separator = :
++# version_path_separator = ;
++# version_path_separator = space
++# version_path_separator = newline
++#
++# Use os.pathsep. Default configuration used for new projects.
++version_path_separator = os
++
++# set to 'true' to search source files recursively
++# in each "version_locations" directory
++# new in Alembic version 1.10
++# recursive_version_locations = false
++
++# the output encoding used when revision files
++# are written from script.py.mako
++# output_encoding = utf-8
++
++sqlalchemy.url = driver://user:pass@localhost/dbname
++
++
++[post_write_hooks]
++# post_write_hooks defines scripts or Python functions that are run
++# on newly generated revision scripts.  See the documentation for further
++# detail and examples
++
++# format using "black" - use the console_scripts runner, against the "black" entrypoint
++# hooks = black
++# black.type = console_scripts
++# black.entrypoint = black
++# black.options = -l 79 REVISION_SCRIPT_FILENAME
++
++# lint with attempts to fix using "ruff" - use the exec runner, execute a binary
++# hooks = ruff
++# ruff.type = exec
++# ruff.executable = %(here)s/.venv/bin/ruff
++# ruff.options = check --fix REVISION_SCRIPT_FILENAME
++
++# Logging configuration
++[loggers]
++keys = root,sqlalchemy,alembic
++
++[handlers]
++keys = console
++
++[formatters]
++keys = generic
++
++[logger_root]
++level = WARNING
++handlers = console
++qualname =
++
++[logger_sqlalchemy]
++level = WARNING
++handlers =
++qualname = sqlalchemy.engine
++
++[logger_alembic]
++level = INFO
++handlers =
++qualname = alembic
++
++[handler_console]
++class = StreamHandler
++args = (sys.stderr,)
++level = NOTSET
++formatter = generic
++
++[formatter_generic]
++format = %(levelname)-5.5s [%(name)s] %(message)s
++datefmt = %H:%M:%S
+diff --git a/migrations/README b/migrations/README
+new file mode 100644
+index 0000000..98e4f9c
+--- /dev/null
++++ b/migrations/README
+@@ -0,0 +1 @@
++Generic single-database configuration.
+\ No newline at end of file
+diff --git a/migrations/env.py b/migrations/env.py
+new file mode 100644
+index 0000000..36112a3
+--- /dev/null
++++ b/migrations/env.py
+@@ -0,0 +1,78 @@
++from logging.config import fileConfig
++
++from sqlalchemy import engine_from_config
++from sqlalchemy import pool
++
++from alembic import context
++
++# this is the Alembic Config object, which provides
++# access to the values within the .ini file in use.
++config = context.config
++
++# Interpret the config file for Python logging.
++# This line sets up loggers basically.
++if config.config_file_name is not None:
++    fileConfig(config.config_file_name)
++
++# add your model's MetaData object here
++# for 'autogenerate' support
++# from myapp import mymodel
++# target_metadata = mymodel.Base.metadata
++target_metadata = None
++
++# other values from the config, defined by the needs of env.py,
++# can be acquired:
++# my_important_option = config.get_main_option("my_important_option")
++# ... etc.
++
++
++def run_migrations_offline() -> None:
++    """Run migrations in 'offline' mode.
++
++    This configures the context with just a URL
++    and not an Engine, though an Engine is acceptable
++    here as well.  By skipping the Engine creation
++    we don't even need a DBAPI to be available.
++
++    Calls to context.execute() here emit the given string to the
++    script output.
++
++    """
++    url = config.get_main_option("sqlalchemy.url")
++    context.configure(
++        url=url,
++        target_metadata=target_metadata,
++        literal_binds=True,
++        dialect_opts={"paramstyle": "named"},
++    )
++
++    with context.begin_transaction():
++        context.run_migrations()
++
++
++def run_migrations_online() -> None:
++    """Run migrations in 'online' mode.
++
++    In this scenario we need to create an Engine
++    and associate a connection with the context.
++
++    """
++    connectable = engine_from_config(
++        config.get_section(config.config_ini_section, {}),
++        prefix="sqlalchemy.",
++        poolclass=pool.NullPool,
++    )
++
++    with connectable.connect() as connection:
++        context.configure(
++            connection=connection, target_metadata=target_metadata
++        )
++
++        with context.begin_transaction():
++            context.run_migrations()
++
++
++if context.is_offline_mode():
++    run_migrations_offline()
++else:
++    run_migrations_online()
+diff --git a/migrations/script.py.mako b/migrations/script.py.mako
+new file mode 100644
+index 0000000..480b130
+--- /dev/null
++++ b/migrations/script.py.mako
+@@ -0,0 +1,28 @@
++"""${message}
++
++Revision ID: ${up_revision}
++Revises: ${down_revision | comma,n}
++Create Date: ${create_date}
++
++"""
++from typing import Sequence, Union
++
++from alembic import op
++import sqlalchemy as sa
++${imports if imports else ""}
++
++# revision identifiers, used by Alembic.
++revision: str = ${repr(up_revision)}
++down_revision: Union[str, None] = ${repr(down_revision)}
++branch_labels: Union[str, Sequence[str], None] = ${repr(branch_labels)}
++depends_on: Union[str, Sequence[str], None] = ${repr(depends_on)}
++
++
++def upgrade() -> None:
++    """Upgrade schema."""
++    ${upgrades if upgrades else "pass"}
++
++
++def downgrade() -> None:
++    """Downgrade schema."""
++    ${downgrades if downgrades else "pass"}
+diff --git a/migrations/versions/0001_initial.py b/migrations/versions/0001_initial.py
+new file mode 100644
+index 0000000..2fcebfb
+--- /dev/null
++++ b/migrations/versions/0001_initial.py
+@@ -0,0 +1,28 @@
++"""initial
++
++Revision ID: 0001
++Revises: 
++Create Date: 2024-05-23
++"""
++
++from alembic import op
++import sqlalchemy as sa
++from rahil.schemas import Base
++from sqlalchemy.schema import CreateTable
++
++# revision identifiers, used by Alembic.
++revision = '0001'
++down_revision = None
++branch_labels = None
++depends_on = None
++
++def upgrade() -> None:
++    conn = op.get_bind()
++    for table in Base.metadata.sorted_tables:
++        conn.execute(sa.text(str(CreateTable(table))))
++
++
++def downgrade() -> None:
++    conn = op.get_bind()
++    for table in reversed(Base.metadata.sorted_tables):
++        conn.execute(sa.text(f"DROP TABLE IF EXISTS {table.name}"))
+diff --git a/rahil/create_tables.py b/rahil/create_tables.py
+index 57d0b82..109db4c 100644
+--- a/rahil/create_tables.py
++++ b/rahil/create_tables.py
+@@ -1,237 +1,53 @@
+ #!/usr/bin/env python3
+ """
+ Script to create staging tables in Snowflake
+ """
++from sqlalchemy.schema import CreateTable
++
+ from . import config
+ from .connection import get_snowflake_connection
++from .schemas import Base
+ 
+ def create_staging_tables():
+     """
+     Create staging tables in Snowflake
+     """
+     try:
+         # Connect to Snowflake
+         conn = get_snowflake_connection()
+         cursor = conn.cursor()
+         
+         # Use our database
+         cursor.execute(f"USE DATABASE {config.DATABASE_NAME}")
+         cursor.execute("USE SCHEMA PUBLIC")
+         
+-        # Create tables
+-        table_creation_statements = [
+-            """
+-            -- 1. CHANNEL
+-            CREATE OR REPLACE TABLE STAGING_CHANNEL (
+-              CHANNELID            INTEGER,
+-              CHANNELCATEGORYID    INTEGER,
+-              CHANNEL              VARCHAR,
+-              CREATEDDATE          VARCHAR,
+-              CREATEDBY            VARCHAR,
+-              MODIFIEDDATE         VARCHAR,
+-              MODIFIEDBY           VARCHAR
+-            );
+-            """,
+-            
+-            """
+-            -- 2. CHANNELCATEGORY
+-            CREATE OR REPLACE TABLE STAGING_CHANNELCATEGORY (
+-              CHANNELCATEGORYID    INTEGER,
+-              CHANNELCATEGORY      VARCHAR,
+-              CREATEDDATE          VARCHAR,
+-              CREATEDBY            VARCHAR,
+-              MODIFIEDDATE         VARCHAR,
+-              MODIFIEDBY           VARCHAR
+-            );
+-            """,
+-            
+-            """
+-            -- 3. CUSTOMER
+-            CREATE OR REPLACE TABLE STAGING_CUSTOMER (
+-              CUSTOMERID           VARCHAR,
+-              SUBSEGMENTID         INTEGER,
+-              FIRSTNAME            VARCHAR,
+-              LASTNAME             VARCHAR,
+-              GENDER               VARCHAR,
+-              EMAILADDRESS         VARCHAR,
+-              ADDRESS              VARCHAR,
+-              CITY                 VARCHAR,
+-              STATEPROVINCE        VARCHAR,
+-              COUNTRY              VARCHAR,
+-              POSTALCODE           INTEGER,
+-              PHONENUMBER          VARCHAR,
+-              CREATEDDATE          VARCHAR,
+-              CREATEDBY            VARCHAR,
+-              MODIFIEDDATE         VARCHAR,
+-              MODIFIEDBY           VARCHAR
+-            );
+-            """,
+-            
+-            """
+-            -- 4. PRODUCT
+-            CREATE OR REPLACE TABLE STAGING_PRODUCT (
+-              PRODUCTID            INTEGER,
+-              PRODUCTTYPEID        INTEGER,
+-              PRODUCT              VARCHAR,
+-              COLOR                VARCHAR,
+-              STYLE                VARCHAR,
+-              UNITOFMEASUREID      INTEGER,
+-              WEIGHT               VARCHAR,
+-              PRICE                VARCHAR,
+-              COST                 VARCHAR,
+-              CREATEDDATE          VARCHAR,
+-              CREATEDBY            VARCHAR,
+-              MODIFIEDDATE         VARCHAR,
+-              MODIFIEDBY           VARCHAR,
+-              WHOLESALEPRICE       VARCHAR
+-            );
+-            """,
+-            
+-            """
+-            -- 5. PRODUCTCATEGORY
+-            CREATE OR REPLACE TABLE STAGING_PRODUCTCATEGORY (
+-              PRODUCTCATEGORYID    INTEGER,
+-              PRODUCTCATEGORY      VARCHAR,
+-              CREATEDDATE          VARCHAR,
+-              CREATEDBY            VARCHAR,
+-              MODIFIEDDATE         VARCHAR,
+-              MODIFIEDBY           VARCHAR
+-            );
+-            """,
+-            
+-            """
+-            -- 6. PRODUCTTYPE
+-            CREATE OR REPLACE TABLE STAGING_PRODUCTTYPE (
+-              PRODUCTTYPEID        INTEGER,
+-              PRODUCTCATEGORYID    INTEGER,
+-              PRODUCTTYPE          VARCHAR,
+-              CREATEDDATE          VARCHAR,
+-              CREATEDBY            VARCHAR,
+-              MODIFIEDDATE         VARCHAR,
+-              MODIFIEDBY           VARCHAR
+-            );
+-            """,
+-            
+-            """
+-            -- 7. RESELLER
+-            CREATE OR REPLACE TABLE STAGING_RESELLER (
+-              RESELLERID           VARCHAR,
+-              CONTACT              VARCHAR,
+-              EMAILADDRESS         VARCHAR,
+-              ADDRESS              VARCHAR,
+-              CITY                 VARCHAR,
+-              STATEPROVINCE        VARCHAR,
+-              COUNTRY              VARCHAR,
+-              POSTALCODE           INTEGER,
+-              PHONENUMBER          VARCHAR,
+-              CREATEDDATE          VARCHAR,
+-              CREATEDBY            VARCHAR,
+-              MODIFIEDDATE         VARCHAR,
+-              MODIFIEDBY           VARCHAR,
+-              RESELLERNAME         VARCHAR
+-            );
+-            """,
+-            
+-            """
+-            -- 8. STORE
+-            CREATE OR REPLACE TABLE STAGING_STORE (
+-              STOREID              INTEGER,
+-              SUBSEGMENTID         INTEGER,
+-              STORENUMBER          INTEGER,
+-              STOREMANAGER         VARCHAR,
+-              ADDRESS              VARCHAR,
+-              CITY                 VARCHAR,
+-              STATEPROVINCE        VARCHAR,
+-              COUNTRY              VARCHAR,
+-              POSTALCODE           INTEGER,
+-              PHONENUMBER          VARCHAR,
+-              CREATEDDATE          VARCHAR,
+-              CREATEDBY            VARCHAR,
+-              MODIFIEDDATE         VARCHAR,
+-              MODIFIEDBY           VARCHAR
+-            );
+-            """,
+-            
+-            """
+-            -- 9. SALESDETAIL
+-            CREATE OR REPLACE TABLE STAGING_SALESDETAIL (
+-              SALESDETAILID        INTEGER,
+-              SALESHEADERID        INTEGER,
+-              PRODUCTID            INTEGER,
+-              SALESQUANTITY        INTEGER,
+-              SALESAMOUNT          VARCHAR,
+-              CREATEDDATE          VARCHAR,
+-              CREATEDBY            VARCHAR,
+-              MODIFIEDDATE         VARCHAR,
+-              MODIFIEDBY           VARCHAR
+-            );
+-            """,
+-            
+-            """
+-            -- 10. SALESHEADER
+-            CREATE OR REPLACE TABLE STAGING_SALESHEADER (
+-              SALESHEADERID        INTEGER,
+-              DATE                 VARCHAR,
+-              CHANNELID            INTEGER,
+-              STOREID              INTEGER,
+-              CUSTOMERID           VARCHAR,
+-              RESELLERID           VARCHAR,
+-              CREATEDDATE          VARCHAR,
+-              CREATEDBY            VARCHAR,
+-              MODIFIEDDATE         VARCHAR,
+-              MODIFIEDBY           VARCHAR
+-            );
+-            """,
+-            
+-            """
+-            -- 11. TARGETDATACHANNEL
+-            CREATE OR REPLACE TABLE STAGING_TARGETDATACHANNEL (
+-              YEAR                 INTEGER,
+-              CHANNELNAME          VARCHAR,
+-              TARGETNAME           VARCHAR,
+-              TARGETSALESAMOUNT    INTEGER
+-            );
+-            """,
+-            
+-            """
+-            -- 12. TARGETDATAPRODUCT
+-            CREATE OR REPLACE TABLE STAGING_TARGETDATAPRODUCT (
+-              PRODUCTID            INTEGER,
+-              PRODUCT              VARCHAR,
+-              YEAR                 INTEGER,
+-              SALESQUANTITYTARGET  INTEGER
+-            );
+-            """
+-        ]
+-        
++        # Create tables using SQLAlchemy models
+         created_tables = []
+-        
+-        # Execute each SQL statement
+-        for i, sql in enumerate(table_creation_statements, 1):
+-            table_name = f"STAGING_{sql.split('STAGING_')[1].split(' ')[0]}"
+-            print(f"\nCreating table {i}: {table_name}")
++        for i, table in enumerate(Base.metadata.sorted_tables, 1):
++            sql = str(CreateTable(table))
++            print(f"\nCreating table {i}: {table.name}")
+             cursor.execute(sql)
+-            created_tables.append(table_name)
+-            print(f"Table {table_name} created successfully.")
++            created_tables.append(table.name)
++            print(f"Table {table.name} created successfully.")
+         
+         # Verify tables exist
+         print("\nVerifying tables...")
+         cursor.execute("SHOW TABLES")
+         existing_tables = [row[1] for row in cursor.fetchall()]
+         
+         print("\nSummary:")
+         print(f"Tables created: {len(created_tables)}")
+         for table in created_tables:
+             status = "✅ Exists" if table in existing_tables else "❌ Not found"
+             print(f"- {table}: {status}")
+         
+         # Close connections
+         cursor.close()
+         conn.close()
+         print("\nTable creation process completed!")
+         
+     except Exception as e:
+         print(f"Error: {str(e)}")
+ 
+ if __name__ == "__main__":
+     create_staging_tables() 
+\ No newline at end of file
+diff --git a/rahil/run_etl.py b/rahil/run_etl.py
+index beaf06d..7bd472d 100644
+--- a/rahil/run_etl.py
++++ b/rahil/run_etl.py
+@@ -1,59 +1,65 @@
+ #!/usr/bin/env python3
+ """
+ Main ETL runner script - executes all ETL steps in sequence
+ """
+ import sys
+ import time
++import subprocess
+ from . import config
+ from .create_database import create_database
+ from .create_stages import create_stages
+ from .create_tables import create_staging_tables
+ from .load_data import load_data_from_stages
+ from .view_sample_data import view_sample_data
+ 
+ def run_etl():
+     """
+     Run the entire ETL process from start to finish
+     """
+     print("=" * 80)
+     print(f"Starting ETL process for {config.USER_NAME}")
+     print(f"Database: {config.DATABASE_NAME}")
+     print("=" * 80)
+     
+     try:
+         # Step 0: Create database if not exists
+         print("\nSTEP 0: Creating database if not exists...")
+         create_database()
+         time.sleep(1)
+         
+-        # Step 1: Create stages
+-        print("\nSTEP 1: Creating external stages...")
++        # Step 1: Run database migrations
++        print("\nSTEP 1: Applying migrations...")
++        subprocess.run(["alembic", "upgrade", "head"], check=True)
++        time.sleep(1)
++
++        # Step 2: Create stages
++        print("\nSTEP 2: Creating external stages...")
+         create_stages()
+         time.sleep(1)
+-        
+-        # Step 2: Create tables
+-        print("\nSTEP 2: Creating staging tables...")
++
++        # Step 3: Create tables
++        print("\nSTEP 3: Creating staging tables...")
+         create_staging_tables()
+         time.sleep(1)
+-        
+-        # Step 3: Load data
+-        print("\nSTEP 3: Loading data from stages to tables...")
++
++        # Step 4: Load data
++        print("\nSTEP 4: Loading data from stages to tables...")
+         load_data_from_stages()
+         time.sleep(1)
+-        
+-        # Step 4: Display sample data
+-        print("\nSTEP 4: Displaying sample data from tables...")
++
++        # Step 5: Display sample data
++        print("\nSTEP 5: Displaying sample data from tables...")
+         view_sample_data()
+         
+         print("\n" + "=" * 80)
+         print("ETL process completed successfully!")
+         print("=" * 80)
+         
+     except Exception as e:
+         print(f"\nERROR: ETL process failed: {str(e)}")
+         return 1
+     
+     return 0
+ 
+ if __name__ == "__main__":
+     sys.exit(run_etl()) 
+\ No newline at end of file
+diff --git a/rahil/schema_utils.py b/rahil/schema_utils.py
+new file mode 100644
+index 0000000..c948dd8
+--- /dev/null
++++ b/rahil/schema_utils.py
+@@ -0,0 +1,10 @@
++"""Utilities for working with SQLAlchemy schema definitions."""
++from sqlalchemy.schema import CreateTable
++from sqlalchemy import MetaData
++from .schemas import Base
++
++
++def get_create_statements() -> list[str]:
++    """Return CREATE TABLE statements for all models."""
++    metadata = Base.metadata
++    return [str(CreateTable(table)) for table in metadata.sorted_tables]
+diff --git a/rahil/schemas/__init__.py b/rahil/schemas/__init__.py
+new file mode 100644
+index 0000000..4040706
+--- /dev/null
++++ b/rahil/schemas/__init__.py
+@@ -0,0 +1,34 @@
++"""SQLAlchemy models for staging tables."""
++from sqlalchemy.orm import declarative_base
++
++Base = declarative_base()
++
++# Import models so that Base.metadata is populated
++from . import channel  # noqa: E402
++from . import channel_category  # noqa: E402
++from . import customer  # noqa: E402
++from . import product  # noqa: E402
++from . import product_category  # noqa: E402
++from . import product_type  # noqa: E402
++from . import reseller  # noqa: E402
++from . import store  # noqa: E402
++from . import sales_detail  # noqa: E402
++from . import sales_header  # noqa: E402
++from . import target_data_channel  # noqa: E402
++from . import target_data_product  # noqa: E402
++
++__all__ = [
++    "Base",
++    "channel",
++    "channel_category",
++    "customer",
++    "product",
++    "product_category",
++    "product_type",
++    "reseller",
++    "store",
++    "sales_detail",
++    "sales_header",
++    "target_data_channel",
++    "target_data_product",
++]
+diff --git a/rahil/schemas/channel.py b/rahil/schemas/channel.py
+new file mode 100644
+index 0000000..12e4265
+--- /dev/null
++++ b/rahil/schemas/channel.py
+@@ -0,0 +1,13 @@
++from sqlalchemy import Column, Integer, String
++from . import Base
++
++class Channel(Base):
++    __tablename__ = "STAGING_CHANNEL"
++
++    CHANNELID = Column(Integer, primary_key=True)
++    CHANNELCATEGORYID = Column(Integer)
++    CHANNEL = Column(String)
++    CREATEDDATE = Column(String)
++    CREATEDBY = Column(String)
++    MODIFIEDDATE = Column(String)
++    MODIFIEDBY = Column(String)
+diff --git a/rahil/schemas/channel_category.py b/rahil/schemas/channel_category.py
+new file mode 100644
+index 0000000..0556ef0
+--- /dev/null
++++ b/rahil/schemas/channel_category.py
+@@ -0,0 +1,12 @@
++from sqlalchemy import Column, Integer, String
++from . import Base
++
++class ChannelCategory(Base):
++    __tablename__ = "STAGING_CHANNELCATEGORY"
++
++    CHANNELCATEGORYID = Column(Integer, primary_key=True)
++    CHANNELCATEGORY = Column(String)
++    CREATEDDATE = Column(String)
++    CREATEDBY = Column(String)
++    MODIFIEDDATE = Column(String)
++    MODIFIEDBY = Column(String)
+diff --git a/rahil/schemas/customer.py b/rahil/schemas/customer.py
+new file mode 100644
+index 0000000..fc313b5
+--- /dev/null
++++ b/rahil/schemas/customer.py
+@@ -0,0 +1,22 @@
++from sqlalchemy import Column, Integer, String
++from . import Base
++
++class Customer(Base):
++    __tablename__ = "STAGING_CUSTOMER"
++
++    CUSTOMERID = Column(String, primary_key=True)
++    SUBSEGMENTID = Column(Integer)
++    FIRSTNAME = Column(String)
++    LASTNAME = Column(String)
++    GENDER = Column(String)
++    EMAILADDRESS = Column(String)
++    ADDRESS = Column(String)
++    CITY = Column(String)
++    STATEPROVINCE = Column(String)
++    COUNTRY = Column(String)
++    POSTALCODE = Column(Integer)
++    PHONENUMBER = Column(String)
++    CREATEDDATE = Column(String)
++    CREATEDBY = Column(String)
++    MODIFIEDDATE = Column(String)
++    MODIFIEDBY = Column(String)
+diff --git a/rahil/schemas/product.py b/rahil/schemas/product.py
+new file mode 100644
+index 0000000..7bf4d5b
+--- /dev/null
++++ b/rahil/schemas/product.py
+@@ -0,0 +1,20 @@
++from sqlalchemy import Column, Integer, String
++from . import Base
++
++class Product(Base):
++    __tablename__ = "STAGING_PRODUCT"
++
++    PRODUCTID = Column(Integer, primary_key=True)
++    PRODUCTTYPEID = Column(Integer)
++    PRODUCT = Column(String)
++    COLOR = Column(String)
++    STYLE = Column(String)
++    UNITOFMEASUREID = Column(Integer)
++    WEIGHT = Column(String)
++    PRICE = Column(String)
++    COST = Column(String)
++    CREATEDDATE = Column(String)
++    CREATEDBY = Column(String)
++    MODIFIEDDATE = Column(String)
++    MODIFIEDBY = Column(String)
++    WHOLESALEPRICE = Column(String)
+diff --git a/rahil/schemas/product_category.py b/rahil/schemas/product_category.py
+new file mode 100644
+index 0000000..b029135
+--- /dev/null
++++ b/rahil/schemas/product_category.py
+@@ -0,0 +1,12 @@
++from sqlalchemy import Column, Integer, String
++from . import Base
++
++class ProductCategory(Base):
++    __tablename__ = "STAGING_PRODUCTCATEGORY"
++
++    PRODUCTCATEGORYID = Column(Integer, primary_key=True)
++    PRODUCTCATEGORY = Column(String)
++    CREATEDDATE = Column(String)
++    CREATEDBY = Column(String)
++    MODIFIEDDATE = Column(String)
++    MODIFIEDBY = Column(String)
+diff --git a/rahil/schemas/product_type.py b/rahil/schemas/product_type.py
+new file mode 100644
+index 0000000..cb49078
+--- /dev/null
++++ b/rahil/schemas/product_type.py
+@@ -0,0 +1,13 @@
++from sqlalchemy import Column, Integer, String
++from . import Base
++
++class ProductType(Base):
++    __tablename__ = "STAGING_PRODUCTTYPE"
++
++    PRODUCTTYPEID = Column(Integer, primary_key=True)
++    PRODUCTCATEGORYID = Column(Integer)
++    PRODUCTTYPE = Column(String)
++    CREATEDDATE = Column(String)
++    CREATEDBY = Column(String)
++    MODIFIEDDATE = Column(String)
++    MODIFIEDBY = Column(String)
+diff --git a/rahil/schemas/reseller.py b/rahil/schemas/reseller.py
+new file mode 100644
+index 0000000..22a52ed
+--- /dev/null
++++ b/rahil/schemas/reseller.py
+@@ -0,0 +1,20 @@
++from sqlalchemy import Column, Integer, String
++from . import Base
++
++class Reseller(Base):
++    __tablename__ = "STAGING_RESELLER"
++
++    RESELLERID = Column(String, primary_key=True)
++    CONTACT = Column(String)
++    EMAILADDRESS = Column(String)
++    ADDRESS = Column(String)
++    CITY = Column(String)
++    STATEPROVINCE = Column(String)
++    COUNTRY = Column(String)
++    POSTALCODE = Column(Integer)
++    PHONENUMBER = Column(String)
++    CREATEDDATE = Column(String)
++    CREATEDBY = Column(String)
++    MODIFIEDDATE = Column(String)
++    MODIFIEDBY = Column(String)
++    RESELLERNAME = Column(String)
+diff --git a/rahil/schemas/sales_detail.py b/rahil/schemas/sales_detail.py
+new file mode 100644
+index 0000000..38b271e
+--- /dev/null
++++ b/rahil/schemas/sales_detail.py
+@@ -0,0 +1,15 @@
++from sqlalchemy import Column, Integer, String
++from . import Base
++
++class SalesDetail(Base):
++    __tablename__ = "STAGING_SALESDETAIL"
++
++    SALESDETAILID = Column(Integer, primary_key=True)
++    SALESHEADERID = Column(Integer)
++    PRODUCTID = Column(Integer)
++    SALESQUANTITY = Column(Integer)
++    SALESAMOUNT = Column(String)
++    CREATEDDATE = Column(String)
++    CREATEDBY = Column(String)
++    MODIFIEDDATE = Column(String)
++    MODIFIEDBY = Column(String)
+diff --git a/rahil/schemas/sales_header.py b/rahil/schemas/sales_header.py
+new file mode 100644
+index 0000000..5e21157
+--- /dev/null
++++ b/rahil/schemas/sales_header.py
+@@ -0,0 +1,16 @@
++from sqlalchemy import Column, Integer, String
++from . import Base
++
++class SalesHeader(Base):
++    __tablename__ = "STAGING_SALESHEADER"
++
++    SALESHEADERID = Column(Integer, primary_key=True)
++    DATE = Column(String)
++    CHANNELID = Column(Integer)
++    STOREID = Column(Integer)
++    CUSTOMERID = Column(String)
++    RESELLERID = Column(String)
++    CREATEDDATE = Column(String)
++    CREATEDBY = Column(String)
++    MODIFIEDDATE = Column(String)
++    MODIFIEDBY = Column(String)
+diff --git a/rahil/schemas/store.py b/rahil/schemas/store.py
+new file mode 100644
+index 0000000..8adf3b2
+--- /dev/null
++++ b/rahil/schemas/store.py
+@@ -0,0 +1,20 @@
++from sqlalchemy import Column, Integer, String
++from . import Base
++
++class Store(Base):
++    __tablename__ = "STAGING_STORE"
++
++    STOREID = Column(Integer, primary_key=True)
++    SUBSEGMENTID = Column(Integer)
++    STORENUMBER = Column(Integer)
++    STOREMANAGER = Column(String)
++    ADDRESS = Column(String)
++    CITY = Column(String)
++    STATEPROVINCE = Column(String)
++    COUNTRY = Column(String)
++    POSTALCODE = Column(Integer)
++    PHONENUMBER = Column(String)
++    CREATEDDATE = Column(String)
++    CREATEDBY = Column(String)
++    MODIFIEDDATE = Column(String)
++    MODIFIEDBY = Column(String)
+diff --git a/rahil/schemas/target_data_channel.py b/rahil/schemas/target_data_channel.py
+new file mode 100644
+index 0000000..3cadd06
+--- /dev/null
++++ b/rahil/schemas/target_data_channel.py
+@@ -0,0 +1,10 @@
++from sqlalchemy import Column, Integer, String
++from . import Base
++
++class TargetDataChannel(Base):
++    __tablename__ = "STAGING_TARGETDATACHANNEL"
++
++    YEAR = Column(Integer, primary_key=True)
++    CHANNELNAME = Column(String)
++    TARGETNAME = Column(String)
++    TARGETSALESAMOUNT = Column(Integer)
+diff --git a/rahil/schemas/target_data_product.py b/rahil/schemas/target_data_product.py
+new file mode 100644
+index 0000000..14c6b29
+--- /dev/null
++++ b/rahil/schemas/target_data_product.py
+@@ -0,0 +1,10 @@
++from sqlalchemy import Column, Integer, String
++from . import Base
++
++class TargetDataProduct(Base):
++    __tablename__ = "STAGING_TARGETDATAPRODUCT"
++
++    PRODUCTID = Column(Integer, primary_key=True)
++    PRODUCT = Column(String)
++    YEAR = Column(Integer)
++    SALESQUANTITYTARGET = Column(Integer)

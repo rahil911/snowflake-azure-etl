@@ -1,6 +1,7 @@
 """Dim_Location dimension table."""
-from sqlalchemy import Column, Integer, String
-from . import DimensionBase
+from sqlalchemy import Column, Integer, String, Float
+from sqlalchemy.ext.declarative import declarative_base
+from .. import DimensionBase
 
 class DimLocation(DimensionBase):
     """SQLAlchemy model for the Dim_Location table."""

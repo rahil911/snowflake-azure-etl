@@ -1,9 +1,7 @@
 """SQLAlchemy models for dimension tables."""
-from sqlalchemy.orm import declarative_base
-
-DimensionBase = declarative_base()
 
 # Import models so that metadata is populated
+# These models should now use the DimensionBase from rahil.schemas
 try:
     from . import date  # noqa: E402
     from . import product  # noqa: E402
@@ -16,7 +14,6 @@ except ImportError:
     pass
 
 __all__ = [
-    "DimensionBase",
     "date",
     "product",
     "store",

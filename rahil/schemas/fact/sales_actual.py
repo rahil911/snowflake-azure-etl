@@ -14,7 +14,7 @@ class FactSalesActual(FactBase):
     DimSaleDateID = Column(Integer)
     DimLocationID = Column(Integer)
     SalesHeaderID = Column(Integer)
-    SalesDetailID = Column(Integer)
+    SalesDetailID = Column(Integer, primary_key=True)
     SaleAmount = Column(Float)
     SaleQuantity = Column(Integer)
     SaleUnitPrice = Column(Float)
