@@ -1,0 +1,17 @@
+# Ignore Alembic and migration artifacts
+alembic.ini
+migrations/
+
+# Environment files
+.env
+
+# Logs
+logs/
+
+# Python caches
+__pycache__/
+*.py[cod]
+*.so
+
+# Test cache
+.pytest_cache/

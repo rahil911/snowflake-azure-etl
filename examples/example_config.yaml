@@ -1,0 +1,10 @@
+target_database: AUTO_ETL_DB
+target_schema: PUBLIC
+export_schema_dir: schemas
+# paths to optional SQL scripts executed after load
+transformations:
+  - transformations/post_load.sql
+data_sources:
+  - name: sample
+    path: path/to/sample.csv
+    file_format: csv
