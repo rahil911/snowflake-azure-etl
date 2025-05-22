@@ -33,6 +33,25 @@ rahil/
     └── etl_run_*.log       # Timestamped log files
 ```
 
+### Script Overview
+
+| Script | Purpose |
+|--------|---------|
+|`create_database.py`|Create the staging database and schema if they do not already exist.|
+|`create_stages.py`|Define external stages pointing to Azure Blob Storage for each entity.|
+|`create_tables.py`|Create staging tables from SQL definitions in `private_ddl/`; copies example files if none are present.|
+|`load_data.py`|Load data from the external stages into the staging tables.|
+|`view_sample_data.py`|Display sample rows from each staging table.|
+|`run_etl.py`|Run all staging steps in order.|
+|`create_dimension_database.py`|Create the dimensional model database.|
+|`create_dimension_tables.py`|Create all dimension tables and insert default "Unknown" members.|
+|`load_dim_date.py`|Create and populate the `Dim_Date` table.|
+|`load_dimension_tables.py`|Transform data from staging tables into dimension tables.|
+|`create_fact_tables.py`|Create fact tables from SQL files.|
+|`load_fact_tables.py`|Populate fact tables from staging and dimension data.|
+|`run_dimensional_etl.py`|Run the dimensional ETL sequence.|
+|`verify_sql.py`|Validate that SQL definition files match the code.|
+
 ## Entities Processed
 
 This ETL pipeline processes 12 entities:
@@ -252,7 +271,7 @@ After loading data into staging tables, you can run the dimensional ETL process 
 To run the complete dimensional ETL process:
 
 ```bash
-python run_etl.py
+python -m rahil.run_dimensional_etl
 ```
 
 This will:
@@ -310,22 +329,18 @@ The complete ETL workflow consists of two main phases:
 
 2. **Dimensional ETL** (from staging to dimensional model)
    ```bash
-   python run_dim_etl.py
+   python -m rahil.run_dimensional_etl
    ```
 
 ### Running the Complete ETL Pipeline
 
-For convenience, you can run the entire ETL process from Azure Blob Storage to the final dimensional model in a single command:
+To process data end-to-end run both ETL phases back to back:
 
 ```bash
-python run_complete_etl.py
+python -m rahil.run_etl
+python -m rahil.run_dimensional_etl
 ```
 
-This will:
-1. Run the staging ETL to load data from Azure Blob Storage to staging tables
-2. Run the dimensional ETL to transform staging data into dimension and fact tables
-3. Log the entire process with timestamped output
+This sequence loads the staging tables, then builds the dimensional model and facts. Each step logs its output under `rahil/logs/` with a timestamp.
 
-This is the recommended approach for running the full pipeline, as it ensures proper data flow and handles dependencies between stages.
-
-For best results when running individual components, always run the staging ETL first to ensure the latest data is available before running the dimensional ETL. 
+Always run the staging phase first so the dimensional ETL has up to date data available.
