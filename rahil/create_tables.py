@@ -1,36 +1,37 @@
 #!/usr/bin/env python3
 """
-Script to create staging tables in Snowflake.
-This version uses external SQL files instead of inline DDL.
+Script to create staging tables in Snowflake
 """
 import os
+import shutil
 from pathlib import Path
 from . import config
 from .connection import get_snowflake_connection
 
-def load_sql_file(entity):
+def copy_sql_from_backup_if_needed():
     """
-    Load SQL file for a given entity
+    Copy SQL files from rahil backup directory if the main private_ddl directory is empty
     """
-    base_dir = Path(__file__).parent.parent
-    sql_path = base_dir / "local_schemas" / f"{entity}.sql"
+    private_ddl_dir = Path(__file__).parents[1] / "private_ddl"
+    rahil_backup_dir = private_ddl_dir / "rahil"
     
-    if not sql_path.exists():
-        # Try the example file if actual file doesn't exist
-        sql_path = base_dir / "local_schemas" / f"{entity}.sql.example"
-        if not sql_path.exists():
-            raise FileNotFoundError(f"SQL file for {entity} not found")
+    # Make sure the directories exist
+    private_ddl_dir.mkdir(exist_ok=True)
     
-    sql_content = sql_path.read_text()
-    # Replace placeholders with actual values
-    sql_content = sql_content.replace("${DB_NAME}", config.DATABASE_NAME)
-    sql_content = sql_content.replace("${SCHEMA}", config.SNOWFLAKE_SCHEMA)
+    # Check if there are staging_*.sql files in the main private_ddl directory
+    staging_files = list(private_ddl_dir.glob("staging_*.sql"))
     
-    return sql_content
+    # If no staging files exist and rahil backup directory exists, copy them over
+    if not staging_files and rahil_backup_dir.exists():
+        print("No SQL definition files found. Copying from backup...")
+        for sql_file in rahil_backup_dir.glob("staging_*.sql"):
+            target_file = private_ddl_dir / sql_file.name
+            shutil.copy2(sql_file, target_file)
+            print(f"Copied {sql_file.name} to {private_ddl_dir}")
 
 def create_staging_tables():
     """
-    Create staging tables in Snowflake by loading and executing external SQL files
+    Create staging tables in Snowflake
     """
     try:
         # Connect to Snowflake
@@ -41,19 +42,36 @@ def create_staging_tables():
         cursor.execute(f"USE DATABASE {config.DATABASE_NAME}")
         cursor.execute("USE SCHEMA PUBLIC")
         
+        # Path to SQL definition files
+        sql_dir = Path(__file__).parents[1] / "private_ddl"
+        
+        # Copy SQL files from backup if needed
+        copy_sql_from_backup_if_needed()
+        
+        # Get all staging table SQL files
+        sql_files = list(sql_dir.glob("staging_*.sql"))
+        
+        if not sql_files:
+            print(f"Error: No SQL definition files found in {sql_dir}")
+            print("Please add your SQL table definition files with 'staging_*.sql' naming pattern")
+            return
+        
         created_tables = []
         
-        # Create tables for each entity
-        for i, entity in enumerate(config.ENTITIES, 1):
-            try:
-                sql = load_sql_file(entity)
-                table_name = f"STAGING_{entity.upper()}"
-                print(f"\nCreating table {i}: {table_name}")
-                cursor.execute(sql)
-                created_tables.append(table_name)
-                print(f"Table {table_name} created successfully.")
-            except Exception as e:
-                print(f"Error creating table {entity}: {str(e)}")
+        # Execute each SQL file
+        for i, sql_file in enumerate(sql_files, 1):
+            # Extract table name from file name
+            table_name = "STAGING_" + sql_file.stem.replace("staging_", "").upper()
+            print(f"\nCreating table {i}: {table_name}")
+            
+            # Read SQL from file
+            with open(sql_file, 'r') as f:
+                sql = f.read()
+            
+            # Execute the SQL
+            cursor.execute(sql)
+            created_tables.append(table_name)
+            print(f"Table {table_name} created successfully.")
         
         # Verify tables exist
         print("\nVerifying tables...")

@@ -27,6 +27,46 @@ def load_fact_tables():
         # Create a cursor object
         cursor = conn.cursor()
         
+        # Check if the staging database exists
+        cursor.execute("SHOW DATABASES")
+        databases = cursor.fetchall()
+        
+        # Find available staging databases
+        actual_staging_db = None
+        
+        # Look for the exact staging database name first
+        for db in databases:
+            if db[1].upper() == STAGING_DB_NAME.upper():
+                actual_staging_db = db[1]
+                break
+        
+        # If not found, look for databases with "STAGING" in the name
+        if not actual_staging_db:
+            staging_dbs = []
+            for db in databases:
+                if "STAGING" in db[1].upper() and "HIDDEN" in db[1].upper():
+                    staging_dbs.append(db[1])
+            
+            if staging_dbs:
+                # Use the first staging database found
+                actual_staging_db = staging_dbs[0]
+                print(f"⚠️ Warning: {STAGING_DB_NAME} not found. Using {actual_staging_db} instead.")
+            else:
+                # If still not found, look for any database with "STAGING" in the name
+                for db in databases:
+                    if "STAGING" in db[1].upper():
+                        staging_dbs.append(db[1])
+                
+                if staging_dbs:
+                    # Use the first staging database found
+                    actual_staging_db = staging_dbs[0]
+                    print(f"⚠️ Warning: {STAGING_DB_NAME} not found. Using {actual_staging_db} instead.")
+                else:
+                    raise Exception(f"No staging database found. Please run the staging ETL process first.")
+        
+        # Use the actual staging database name for queries
+        staging_db = actual_staging_db if actual_staging_db else STAGING_DB_NAME
+        
         # Load Fact_SalesActual table
         print("\nLoading Fact_SalesActual table...")
         cursor.execute(f"""
@@ -98,8 +138,8 @@ def load_fact_tables():
             -- Total profit safely
             CAST(COALESCE(sd.SalesAmount, 0) AS FLOAT) - (COALESCE(sd.SalesQuantity, 0) * COALESCE(CAST(dp.ProductCost AS FLOAT), 0)) as SaleTotalProfit
             
-        FROM {STAGING_DB_NAME}.{SNOWFLAKE_SCHEMA}.STAGING_SALESHEADER sh
-        JOIN {STAGING_DB_NAME}.{SNOWFLAKE_SCHEMA}.STAGING_SALESDETAIL sd 
+        FROM {staging_db}.{SNOWFLAKE_SCHEMA}.STAGING_SALESHEADER sh
+        JOIN {staging_db}.{SNOWFLAKE_SCHEMA}.STAGING_SALESDETAIL sd 
             ON sh.SalesHeaderID = sd.SalesHeaderID
         -- Use LEFT JOIN for dimension tables to handle missing references
         LEFT JOIN {DIMENSION_DB_NAME}.{SNOWFLAKE_SCHEMA}.Dim_Product dp 
@@ -138,7 +178,7 @@ def load_fact_tables():
             -- Ensure target quantity is not NULL
             COALESCE(td.SalesQuantityTarget, 0) as SalesQuantityTarget
             
-        FROM {STAGING_DB_NAME}.{SNOWFLAKE_SCHEMA}.STAGING_TARGETDATAPRODUCT td
+        FROM {staging_db}.{SNOWFLAKE_SCHEMA}.STAGING_TARGETDATAPRODUCT td
         LEFT JOIN {DIMENSION_DB_NAME}.{SNOWFLAKE_SCHEMA}.Dim_Product dp 
             ON td.ProductID = dp.ProductID
         WHERE td.ProductID IS NOT NULL
@@ -182,7 +222,7 @@ def load_fact_tables():
             -- Ensure target amount is not NULL
             COALESCE(td.TargetSalesAmount, 0) as TargetSalesAmount
             
-        FROM {STAGING_DB_NAME}.{SNOWFLAKE_SCHEMA}.STAGING_TARGETDATACHANNEL td
+        FROM {staging_db}.{SNOWFLAKE_SCHEMA}.STAGING_TARGETDATACHANNEL td
         LEFT JOIN {DIMENSION_DB_NAME}.{SNOWFLAKE_SCHEMA}.Dim_Channel dc 
             ON td.ChannelName = dc.ChannelName
         LEFT JOIN {DIMENSION_DB_NAME}.{SNOWFLAKE_SCHEMA}.Dim_Store ds

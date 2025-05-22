@@ -201,3 +201,131 @@ For additional security in production environments:
 - Use environment variables instead of .env files
 - Consider using key-pair authentication for Snowflake
 - Use the Snowflake OAuth integration when possible 
+
+## SQL Table Definitions
+
+The ETL pipeline now loads table definitions from SQL files in the `private_ddl/` directory. This improves the system by:
+
+1. **Separating schema from code**: Table definitions are now in separate SQL files rather than embedded in code
+2. **Reusability**: You can customize table structures without modifying Python code
+3. **Maintainability**: Each table definition can be maintained independently
+4. **Academic integrity**: Table definitions are not committed to git, allowing students to create their own schemas
+
+### How SQL files are loaded
+
+The system looks for the following SQL files in the `private_ddl/` directory:
+
+- `staging_*.sql`: Definitions for staging tables
+- `dim_*.sql`: Definitions for dimension tables
+- `fact_*.sql`: Definitions for fact tables
+
+If these files don't exist, the system will automatically copy them from the backup directory `private_ddl/rahil/` if available.
+
+### Creating your own schema
+
+To modify the table structures:
+
+1. Create a `.sql` file in the `private_ddl/` directory with the appropriate naming pattern
+2. Define your table structure using standard Snowflake SQL syntax
+3. Run the ETL process as normal - it will use your custom definitions
+
+Example of a table definition file (`private_ddl/staging_customer.sql`):
+
+```sql
+CREATE OR REPLACE TABLE STAGING_CUSTOMER (
+  CUSTOMERID           VARCHAR,
+  SUBSEGMENTID         INTEGER,
+  FIRSTNAME            VARCHAR,
+  LASTNAME             VARCHAR,
+  GENDER               VARCHAR,
+  -- ... other columns ...
+  MODIFIEDBY           VARCHAR
+);
+```
+
+## Dimensional Model ETL
+
+After loading data into staging tables, you can run the dimensional ETL process to create and populate a dimensional model. This includes dimension tables, the date dimension, and fact tables.
+
+### Running the Dimensional ETL Process
+
+To run the complete dimensional ETL process:
+
+```bash
+python run_etl.py
+```
+
+This will:
+1. Create a dimensional database named `IMT577_DW_{USER_NAME}_DIMENSION`
+2. Create dimension tables (Product, Location, Customer, Channel, Reseller, Store, Date)
+3. Load the Date dimension with 2 years of data
+4. Load data from staging tables into dimension tables
+5. Create fact tables (SalesActual, ProductSalesTarget, SRCSalesTarget)
+6. Load data from staging tables into fact tables
+7. Log the entire process
+
+### Dimensional Model Architecture
+
+The dimensional model follows a star schema with:
+
+- **Dimension Tables**: Store descriptive attributes for the different business entities
+  - Dim_Product: Product information with pricing and profitability metrics
+  - Dim_Location: Geographic locations for customers, stores, and resellers
+  - Dim_Customer: Customer details with demographics
+  - Dim_Channel: Sales channels and categories
+  - Dim_Reseller: Reseller information with contact details
+  - Dim_Store: Store details with location references
+  - Dim_Date: Calendar date dimension with fiscal periods
+
+- **Fact Tables**: Store transactional and measurement data
+  - Fact_SalesActual: Detailed sales transactions
+  - Fact_ProductSalesTarget: Product-level sales targets
+  - Fact_SRCSalesTarget: Store/Reseller/Channel sales targets
+
+### SQL Table Definitions for Dimensional Model
+
+The dimensional ETL also uses SQL files for table definitions, located in:
+
+- `private_ddl/dim_*.sql`: Definitions for dimension tables
+- `private_ddl/DIM_DATE.sql`: Special file for the date dimension that includes data generation
+- `private_ddl/fact_*.sql`: Definitions for fact tables
+
+These files follow the same pattern as the staging SQL definitions and allow you to customize the dimensional model structure.
+
+### Date Dimension
+
+The Date dimension is populated using a special SQL script that:
+- Creates the Dim_Date table with calendar and fiscal attributes
+- Generates 730 days (2 years) of date records
+- Includes business logic for holidays, weekends, fiscal periods, etc.
+
+## Complete ETL Workflow
+
+The complete ETL workflow consists of two main phases:
+
+1. **Staging ETL** (from Azure Blob to staging tables)
+   ```bash
+   python -m rahil.run_etl
+   ```
+
+2. **Dimensional ETL** (from staging to dimensional model)
+   ```bash
+   python run_dim_etl.py
+   ```
+
+### Running the Complete ETL Pipeline
+
+For convenience, you can run the entire ETL process from Azure Blob Storage to the final dimensional model in a single command:
+
+```bash
+python run_complete_etl.py
+```
+
+This will:
+1. Run the staging ETL to load data from Azure Blob Storage to staging tables
+2. Run the dimensional ETL to transform staging data into dimension and fact tables
+3. Log the entire process with timestamped output
+
+This is the recommended approach for running the full pipeline, as it ensures proper data flow and handles dependencies between stages.
+
+For best results when running individual components, always run the staging ETL first to ensure the latest data is available before running the dimensional ETL. 

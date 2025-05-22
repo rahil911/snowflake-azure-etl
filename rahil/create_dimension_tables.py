@@ -2,6 +2,9 @@
 """
 Create dimension tables for the dimensional model
 """
+import os
+import shutil
+from pathlib import Path
 import snowflake.connector
 from tabulate import tabulate
 from .dim_config import (
@@ -9,6 +12,27 @@ from .dim_config import (
     SNOWFLAKE_WAREHOUSE, SNOWFLAKE_ROLE, DIMENSION_DB_NAME,
     SNOWFLAKE_SCHEMA
 )
+
+def copy_dim_sql_from_backup_if_needed():
+    """
+    Copy SQL files from rahil backup directory if the main private_ddl directory is empty
+    """
+    private_ddl_dir = Path(__file__).parents[1] / "private_ddl"
+    rahil_backup_dir = private_ddl_dir / "rahil"
+    
+    # Make sure the directories exist
+    private_ddl_dir.mkdir(exist_ok=True)
+    
+    # Check if there are dim_*.sql files in the main private_ddl directory
+    dim_files = list(private_ddl_dir.glob("dim_*.sql"))
+    
+    # If no dimension files exist and rahil backup directory exists, copy them over
+    if not dim_files and rahil_backup_dir.exists():
+        print("No dimension SQL definition files found. Copying from backup...")
+        for sql_file in rahil_backup_dir.glob("dim_*.sql"):
+            target_file = private_ddl_dir / sql_file.name
+            shutil.copy2(sql_file, target_file)
+            print(f"Copied {sql_file.name} to {private_ddl_dir}")
 
 def create_dimension_tables():
     """Create dimension tables for the dimensional model"""
@@ -29,96 +53,36 @@ def create_dimension_tables():
         # Create a cursor object
         cursor = conn.cursor()
         
+        # Path to SQL definition files
+        sql_dir = Path(__file__).parents[1] / "private_ddl"
+        
+        # Copy SQL files from backup if needed
+        copy_dim_sql_from_backup_if_needed()
+        
+        # Get all dimension table SQL files
+        sql_files = list(sql_dir.glob("dim_*.sql"))
+        
+        if not sql_files:
+            print(f"Error: No SQL definition files found in {sql_dir}")
+            print("Please add your SQL table definition files with 'dim_*.sql' naming pattern")
+            return False
+        
         # Create Dim_Date table
         # This will be created using the DIM_DATE.sql file separately
         # so we don't need to create it here.
         
-        # Create Dim_Product table
-        print("\nCreating Dim_Product table...")
-        cursor.execute("""
-        CREATE OR REPLACE TABLE Dim_Product (
-            DimProductID INT IDENTITY(1,1) PRIMARY KEY,
-            ProductID INT,
-            ProductTypeID INT,
-            ProductCategoryID INT,
-            ProductName VARCHAR(255),
-            ProductType VARCHAR(255),
-            ProductCategory VARCHAR(255),
-            ProductRetailPrice FLOAT,
-            ProductWholesalePrice FLOAT,
-            ProductCost FLOAT,
-            ProductRetailProfit FLOAT,
-            ProductWholesaleUnitProfit FLOAT,
-            ProductProfitMarginUnitPercent FLOAT
-        )
-        """)
-        
-        # Create Dim_Store table
-        print("Creating Dim_Store table...")
-        cursor.execute("""
-        CREATE OR REPLACE TABLE Dim_Store (
-            DimStoreID INT IDENTITY(1,1) PRIMARY KEY,
-            StoreID INT,
-            DimLocationID INT,
-            SourceStoreID INT,
-            StoreName VARCHAR(255),
-            StoreNumber VARCHAR(255),
-            StoreManager VARCHAR(255)
-        )
-        """)
-        
-        # Create Dim_Reseller table
-        print("Creating Dim_Reseller table...")
-        cursor.execute("""
-        CREATE OR REPLACE TABLE Dim_Reseller (
-            DimResellerID INT IDENTITY(1,1) PRIMARY KEY,
-            ResellerID VARCHAR(255),
-            DimLocationID INT,
-            ResellerName VARCHAR(255),
-            ContactName VARCHAR(255),
-            PhoneNumber VARCHAR(255),
-            Email VARCHAR(255)
-        )
-        """)
-        
-        # Create Dim_Location table
-        print("Creating Dim_Location table...")
-        cursor.execute("""
-        CREATE OR REPLACE TABLE Dim_Location (
-            DimLocationID INT IDENTITY(1,1) PRIMARY KEY,
-            Address VARCHAR(255),
-            City VARCHAR(255),
-            PostalCode VARCHAR(255),
-            State_Province VARCHAR(255),
-            Country VARCHAR(255)
-        )
-        """)
-        
-        # Create Dim_Customer table
-        print("Creating Dim_Customer table...")
-        cursor.execute("""
-        CREATE OR REPLACE TABLE Dim_Customer (
-            DimCustomerID INT IDENTITY(1,1) PRIMARY KEY,
-            CustomerID VARCHAR(255),
-            DimLocationID INT,
-            CustomerFullName VARCHAR(255),
-            CustomerFirstName VARCHAR(255),
-            CustomerLastName VARCHAR(255),
-            CustomerGender VARCHAR(255)
-        )
-        """)
-        
-        # Create Dim_Channel table
-        print("Creating Dim_Channel table...")
-        cursor.execute("""
-        CREATE OR REPLACE TABLE Dim_Channel (
-            DimChannelID INT IDENTITY(1,1) PRIMARY KEY,
-            ChannelID INT,
-            ChannelCategoryID INT,
-            ChannelName VARCHAR(255),
-            ChannelCategory VARCHAR(255)
-        )
-        """)
+        # Execute each SQL file to create dimension tables
+        print("\nCreating dimension tables...")
+        for sql_file in sql_files:
+            table_name = sql_file.stem.replace("_", "").capitalize()
+            print(f"Creating {table_name} table...")
+            
+            # Read SQL from file
+            with open(sql_file, 'r') as f:
+                sql = f.read()
+            
+            # Execute the SQL
+            cursor.execute(sql)
         
         # Add "Unknown" members to dimension tables for handling NULL references
         print("\nAdding unknown members to dimension tables...")

@@ -27,6 +27,46 @@ def load_dimension_tables():
         # Create a cursor object
         cursor = conn.cursor()
         
+        # Check if the staging database exists
+        cursor.execute("SHOW DATABASES")
+        databases = cursor.fetchall()
+        
+        # Find available staging databases
+        actual_staging_db = None
+        
+        # Look for the exact staging database name first
+        for db in databases:
+            if db[1].upper() == STAGING_DB_NAME.upper():
+                actual_staging_db = db[1]
+                break
+        
+        # If not found, look for databases with "STAGING" in the name
+        if not actual_staging_db:
+            staging_dbs = []
+            for db in databases:
+                if "STAGING" in db[1].upper() and "HIDDEN" in db[1].upper():
+                    staging_dbs.append(db[1])
+            
+            if staging_dbs:
+                # Use the first staging database found
+                actual_staging_db = staging_dbs[0]
+                print(f"⚠️ Warning: {STAGING_DB_NAME} not found. Using {actual_staging_db} instead.")
+            else:
+                # If still not found, look for any database with "STAGING" in the name
+                for db in databases:
+                    if "STAGING" in db[1].upper():
+                        staging_dbs.append(db[1])
+                
+                if staging_dbs:
+                    # Use the first staging database found
+                    actual_staging_db = staging_dbs[0]
+                    print(f"⚠️ Warning: {STAGING_DB_NAME} not found. Using {actual_staging_db} instead.")
+                else:
+                    raise Exception(f"No staging database found. Please run the staging ETL process first.")
+        
+        # Use the actual staging database name for queries
+        staging_db = actual_staging_db if actual_staging_db else STAGING_DB_NAME
+        
         # First, load Dim_Location from customer, store, and reseller tables
         print("\nLoading Dim_Location table...")
         cursor.execute(f"""
@@ -40,7 +80,7 @@ def load_dimension_tables():
             COALESCE(CAST(PostalCode AS VARCHAR(255)), 'Unknown') as PostalCode, 
             COALESCE(StateProvince, 'Unknown') as StateProvince, 
             COALESCE(Country, 'Unknown') as Country
-        FROM {STAGING_DB_NAME}.{SNOWFLAKE_SCHEMA}.STAGING_CUSTOMER
+        FROM {staging_db}.{SNOWFLAKE_SCHEMA}.STAGING_CUSTOMER
         WHERE Address IS NOT NULL 
           AND City IS NOT NULL 
           AND Country IS NOT NULL
@@ -54,7 +94,7 @@ def load_dimension_tables():
             COALESCE(CAST(PostalCode AS VARCHAR(255)), 'Unknown') as PostalCode, 
             COALESCE(StateProvince, 'Unknown') as StateProvince, 
             COALESCE(Country, 'Unknown') as Country
-        FROM {STAGING_DB_NAME}.{SNOWFLAKE_SCHEMA}.STAGING_STORE
+        FROM {staging_db}.{SNOWFLAKE_SCHEMA}.STAGING_STORE
         WHERE Address IS NOT NULL 
           AND City IS NOT NULL 
           AND Country IS NOT NULL
@@ -68,7 +108,7 @@ def load_dimension_tables():
             COALESCE(CAST(PostalCode AS VARCHAR(255)), 'Unknown') as PostalCode, 
             COALESCE(StateProvince, 'Unknown') as StateProvince, 
             COALESCE(Country, 'Unknown') as Country
-        FROM {STAGING_DB_NAME}.{SNOWFLAKE_SCHEMA}.STAGING_RESELLER
+        FROM {staging_db}.{SNOWFLAKE_SCHEMA}.STAGING_RESELLER
         WHERE Address IS NOT NULL 
           AND City IS NOT NULL 
           AND Country IS NOT NULL
@@ -90,8 +130,8 @@ def load_dimension_tables():
             c.ChannelCategoryID,
             COALESCE(c.Channel, 'Unknown') as Channel,
             COALESCE(cc.ChannelCategory, 'Unknown') as ChannelCategory
-        FROM {STAGING_DB_NAME}.{SNOWFLAKE_SCHEMA}.STAGING_CHANNEL c
-        JOIN {STAGING_DB_NAME}.{SNOWFLAKE_SCHEMA}.STAGING_CHANNELCATEGORY cc 
+        FROM {staging_db}.{SNOWFLAKE_SCHEMA}.STAGING_CHANNEL c
+        JOIN {staging_db}.{SNOWFLAKE_SCHEMA}.STAGING_CHANNELCATEGORY cc 
             ON c.ChannelCategoryID = cc.ChannelCategoryID
         WHERE c.Channel IS NOT NULL
         """)
@@ -114,7 +154,7 @@ def load_dimension_tables():
             COALESCE(c.FirstName, 'Unknown') as FirstName,
             COALESCE(c.LastName, 'Unknown') as LastName,
             COALESCE(c.Gender, 'Unknown') as Gender
-        FROM {STAGING_DB_NAME}.{SNOWFLAKE_SCHEMA}.STAGING_CUSTOMER c
+        FROM {staging_db}.{SNOWFLAKE_SCHEMA}.STAGING_CUSTOMER c
         LEFT JOIN {DIMENSION_DB_NAME}.{SNOWFLAKE_SCHEMA}.Dim_Location l 
             ON COALESCE(c.Address, 'Unknown') = l.Address
             AND COALESCE(c.City, 'Unknown') = l.City
@@ -142,7 +182,7 @@ def load_dimension_tables():
             COALESCE(r.Contact, 'Unknown') as Contact,
             COALESCE(r.PhoneNumber, 'Unknown') as PhoneNumber,
             COALESCE(r.EmailAddress, 'Unknown') as EmailAddress
-        FROM {STAGING_DB_NAME}.{SNOWFLAKE_SCHEMA}.STAGING_RESELLER r
+        FROM {staging_db}.{SNOWFLAKE_SCHEMA}.STAGING_RESELLER r
         LEFT JOIN {DIMENSION_DB_NAME}.{SNOWFLAKE_SCHEMA}.Dim_Location l 
             ON COALESCE(r.Address, 'Unknown') = l.Address
             AND COALESCE(r.City, 'Unknown') = l.City
@@ -170,7 +210,7 @@ def load_dimension_tables():
             'Store ' || COALESCE(s.StoreNumber, 'Unknown') as StoreName,
             COALESCE(CAST(s.StoreNumber AS VARCHAR(255)), 'Unknown') as StoreNumber,
             COALESCE(s.StoreManager, 'Unknown') as StoreManager
-        FROM {STAGING_DB_NAME}.{SNOWFLAKE_SCHEMA}.STAGING_STORE s
+        FROM {staging_db}.{SNOWFLAKE_SCHEMA}.STAGING_STORE s
         LEFT JOIN {DIMENSION_DB_NAME}.{SNOWFLAKE_SCHEMA}.Dim_Location l 
             ON COALESCE(s.Address, 'Unknown') = l.Address
             AND COALESCE(s.City, 'Unknown') = l.City
@@ -210,10 +250,10 @@ def load_dimension_tables():
                 WHEN COALESCE(CAST(p.Price AS FLOAT), 0) = 0 THEN 0
                 ELSE ((COALESCE(CAST(p.Price AS FLOAT), 0) - COALESCE(CAST(p.Cost AS FLOAT), 0)) / COALESCE(CAST(p.Price AS FLOAT), 1)) * 100
             END as ProductProfitMarginUnitPercent
-        FROM {STAGING_DB_NAME}.{SNOWFLAKE_SCHEMA}.STAGING_PRODUCT p
-        JOIN {STAGING_DB_NAME}.{SNOWFLAKE_SCHEMA}.STAGING_PRODUCTTYPE pt 
+        FROM {staging_db}.{SNOWFLAKE_SCHEMA}.STAGING_PRODUCT p
+        JOIN {staging_db}.{SNOWFLAKE_SCHEMA}.STAGING_PRODUCTTYPE pt 
             ON p.ProductTypeID = pt.ProductTypeID
-        JOIN {STAGING_DB_NAME}.{SNOWFLAKE_SCHEMA}.STAGING_PRODUCTCATEGORY pc 
+        JOIN {staging_db}.{SNOWFLAKE_SCHEMA}.STAGING_PRODUCTCATEGORY pc 
             ON pt.ProductCategoryID = pc.ProductCategoryID
         WHERE p.ProductID IS NOT NULL
         """)

@@ -1,0 +1,26 @@
+# User-specific table definitions
+private_ddl/*
+!private_ddl/example_*.sql
+
+# Rahil's working directory
+rahil/
+
+# Python cache files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Environment variables
+.env
+
+# macOS files
+.DS_Store
+
+# Logs
+logs/
+*.log
+
+# Distribution / packaging
+dist/
+build/
+*.egg-info/ 

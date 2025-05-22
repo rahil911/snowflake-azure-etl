@@ -30,8 +30,8 @@ def load_dim_date():
         # Create a cursor object
         cursor = conn.cursor()
         
-        # Read the SQL script file
-        sql_script_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'DIM_DATE.sql')
+        # Read the SQL script file - Look in private_ddl directory
+        sql_script_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'private_ddl', 'DIM_DATE.sql')
         print(f"Reading SQL script from: {sql_script_path}")
         
         with open(sql_script_path, 'r') as file:

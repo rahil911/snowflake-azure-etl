@@ -1,23 +1,32 @@
 #!/usr/bin/env python3
 """
-Main ETL runner for dimensional model
+Runner script for dimensional ETL process
 """
 import os
 import sys
 import time
 from datetime import datetime
 
-# Add the parent directory to the path to enable absolute imports
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+# Get the absolute path of the current script
+current_dir = os.path.dirname(os.path.abspath(__file__))
 
-# Use absolute imports
-from rahil.create_dimension_database import create_dimension_database
-from rahil.create_dimension_tables import create_dimension_tables
-from rahil.load_dim_date import load_dim_date
-from rahil.load_dimension_tables import load_dimension_tables
-from rahil.create_fact_tables import create_fact_tables
-from rahil.load_fact_tables import load_fact_tables
-from rahil.dim_config import DIMENSION_DB_NAME
+# Add the current directory to the path to enable absolute imports
+if current_dir not in sys.path:
+    sys.path.insert(0, current_dir)
+
+# Import modules with absolute imports
+try:
+    from rahil.dim_config import DIMENSION_DB_NAME
+    from rahil.create_dimension_database import create_dimension_database
+    from rahil.create_dimension_tables import create_dimension_tables
+    from rahil.load_dim_date import load_dim_date
+    from rahil.load_dimension_tables import load_dimension_tables
+    from rahil.create_fact_tables import create_fact_tables
+    from rahil.load_fact_tables import load_fact_tables
+except ImportError as e:
+    print(f"Error importing modules: {e}")
+    print("Make sure you're running this script from the root directory of the project.")
+    sys.exit(1)
 
 def run_dimensional_etl():
     """Run the dimensional model ETL process"""
@@ -70,7 +79,7 @@ def run_dimensional_etl():
 
 if __name__ == "__main__":
     # Create logs directory if it doesn't exist
-    logs_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'logs')
+    logs_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'logs')
     if not os.path.exists(logs_dir):
         os.makedirs(logs_dir)
         
