@@ -4,7 +4,7 @@ This demo script provides an end-to-end demonstration of the Snowflake ETL proce
 
 ## What the Demo Does
 
-1. **Gathers Credentials**: Prompts for Snowflake credentials (account, username, password, etc.)
+1. **Loads Credentials**: Uses environment variables for Snowflake credentials
 2. **Creates Environment**: Sets up a temporary environment with the necessary configuration
 3. **Initializes Project**: Uses the CLI scaffolder to create project structure
 4. **Copies Sample Schemas**: Copies SQL schema files to the temporary environment
@@ -13,16 +13,22 @@ This demo script provides an end-to-end demonstration of the Snowflake ETL proce
 
 ## Running the Demo
 
-To run the demo script:
+To run the demo script, you need to set the required environment variables:
 
 ```bash
-python scripts/demo_etl.py
+SNOWFLAKE_ACCOUNT=your_account \
+SNOWFLAKE_USER=your_username \
+SNOWFLAKE_PASSWORD=your_password \
+AZURE_STORAGE_ACCOUNT=sp72storage.blob.core.windows.net \
+python3 scripts/demo_etl.py
 ```
 
-Or, if you've made it executable:
+Optional environment variables:
 
 ```bash
-./scripts/demo_etl.py
+SNOWFLAKE_WAREHOUSE=COMPUTE_WH  # Default: COMPUTE_WH
+SNOWFLAKE_ROLE=ACCOUNTADMIN     # Default: ACCOUNTADMIN
+USER_NAME=your_name             # Default: Current system user
 ```
 
 ## Requirements
@@ -38,6 +44,7 @@ Or, if you've made it executable:
 - All credentials are only stored temporarily and deleted when the demo completes
 - The script requires internet access to connect to Snowflake
 - The demo uses schema evolution by default
+- The Azure storage account is set to `sp72storage.blob.core.windows.net` by default
 
 ## Example Output
 
@@ -50,17 +57,14 @@ This script demonstrates the end-to-end ETL process.
 It will create a temporary environment and run the ETL pipeline.
 
 ================================================================================
-STEP 1: GATHER CREDENTIALS
+STEP 1: LOADING CREDENTIALS FROM ENVIRONMENT
 ================================================================================
-To run the demo, we need your Snowflake credentials.
-These will only be stored temporarily and will be deleted when the demo completes.
-Snowflake account [your-account.snowflakecomputing.com]: my-account
-Snowflake username [johndoe]: 
-Snowflake password: 
-Snowflake warehouse [COMPUTE_WH]: 
-Snowflake role [ACCOUNTADMIN]: 
-Azure Storage account [youraccountname.blob.core.windows.net]: myazure.blob.core.windows.net
-Your name (for database naming) [johndoe]: 
+Using account: your_account
+Using user: your_username
+Using warehouse: COMPUTE_WH
+Using role: ACCOUNTADMIN
+Using azure_storage: sp72storage.blob.core.windows.net
+Using user_name: johndoe
 
 Created temporary directory: /tmp/tmp_abcdef123
 
