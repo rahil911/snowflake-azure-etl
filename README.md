@@ -54,9 +54,12 @@ rahil/
 
 ## Entities Processed
 
-This ETL pipeline processes 12 entities:
+This ETL pipeline processes entities that you configure in your `.env` file. You can process any subset of the available entities based on what's available in your Azure Blob Storage.
+
+### Available Entities
+The system supports these entities:
 - channel
-- channelcategory
+- channelcategory  
 - customer
 - product
 - productcategory
@@ -67,6 +70,62 @@ This ETL pipeline processes 12 entities:
 - store
 - targetdatachannel
 - targetdataproduct
+
+### Configuring Entities
+
+In your `.env` file, specify which entities you want to process:
+
+```bash
+# Process all entities
+ENTITIES=channel,channelcategory,customer,product,productcategory,producttype,reseller,salesdetail,salesheader,store,targetdatachannel,targetdataproduct
+
+# Process only a few entities
+ENTITIES=channel,customer,product,salesdetail,salesheader
+
+# Process just core sales data
+ENTITIES=customer,product,salesdetail,salesheader
+```
+
+**Important**: The entity names must match your Azure Blob Storage container/folder names exactly.
+
+## Azure Blob Storage Structure
+
+Your Azure Blob Storage should be organized with containers/folders that match the entity names you configure in your `.env` file.
+
+### Expected Structure
+
+```
+your_storage_account.blob.core.windows.net/
+├── channel/
+│   └── channel.csv (or other CSV files)
+├── customer/
+│   └── customer.csv
+├── product/
+│   └── product.csv
+├── salesdetail/
+│   └── salesdetail.csv
+├── salesheader/
+│   └── salesheader.csv
+└── ... (other entity folders as configured)
+```
+
+### URL Pattern
+
+The system creates Snowflake external stages using this pattern:
+```
+azure://{AZURE_STORAGE_ACCOUNT}/{ENTITY_NAME}
+```
+
+**Example**: If your storage account is `mystorageaccount.blob.core.windows.net` and you have `ENTITIES=channel,customer`, the system creates:
+- `azure://mystorageaccount.blob.core.windows.net/channel`
+- `azure://mystorageaccount.blob.core.windows.net/customer`
+
+### File Format Requirements
+
+- **Format**: CSV files
+- **Headers**: First row should contain column names (automatically skipped)
+- **Delimiter**: Comma (`,`)
+- **Null values**: Use `NULL` or `null` for missing values
 
 ## Setup Instructions
 
@@ -95,6 +154,9 @@ This ETL pipeline processes 12 entities:
    
    # Azure Storage account
    AZURE_STORAGE_ACCOUNT=your_storage_account.blob.core.windows.net
+   
+   # Entities to process (comma-separated, matching your Azure blob containers)
+   ENTITIES=channel,customer,product,salesdetail,salesheader
    ```
 
 ## Running the ETL Process

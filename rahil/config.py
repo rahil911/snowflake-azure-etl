@@ -43,18 +43,19 @@ if not AZURE_STORAGE_ACCOUNT:
     print("ERROR: AZURE_STORAGE_ACCOUNT not found in .env file")
     sys.exit(1)
 
-# Entities list - all entities to process in the ETL pipeline
-ENTITIES = [
-    'channel', 
-    'channelcategory', 
-    'customer', 
-    'product', 
-    'productcategory', 
-    'producttype', 
-    'reseller', 
-    'salesdetail', 
-    'salesheader', 
-    'store', 
-    'targetdatachannel', 
-    'targetdataproduct'
-] 
+# Entities list - read from .env file
+ENTITIES_STRING = os.getenv("ENTITIES")
+if not ENTITIES_STRING:
+    print("ERROR: ENTITIES not found in .env file")
+    print("Please add ENTITIES=entity1,entity2,entity3,... to your .env file")
+    sys.exit(1)
+
+# Parse entities from comma-separated string and clean whitespace
+ENTITIES = [entity.strip() for entity in ENTITIES_STRING.split(',') if entity.strip()]
+
+if not ENTITIES:
+    print("ERROR: No valid entities found in ENTITIES configuration")
+    print("Please check your ENTITIES setting in .env file")
+    sys.exit(1)
+
+print(f"Configured to process {len(ENTITIES)} entities: {', '.join(ENTITIES)}") 
