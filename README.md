@@ -406,3 +406,98 @@ python -m rahil.run_dimensional_etl
 This sequence loads the staging tables, then builds the dimensional model and facts. Each step logs its output under `rahil/logs/` with a timestamp.
 
 Always run the staging phase first so the dimensional ETL has up to date data available.
+
+## Secure Views Data Access Layer
+
+After creating the dimensional model, you can create a comprehensive secure views system that provides both pass-through views and analytical views for data access and visualization.
+
+### Creating Secure Views
+
+To create all secure views:
+
+```bash
+python -m rahil.run_views_etl
+```
+
+This will:
+1. Create 10 pass-through secure views for all dimension and fact tables
+2. Create 3 analytical secure views for business intelligence
+3. Verify all views with sample data display
+4. Provide comprehensive logging and documentation
+
+### View Categories
+
+#### Pass-Through Views (10 views)
+These are exact copies of dimension and fact tables using explicit column lists (no SELECT *):
+
+**Dimension Views**: `VW_Dim_Product`, `VW_Dim_Customer`, `VW_Dim_Location`, `VW_Dim_Channel`, `VW_Dim_Store`, `VW_Dim_Reseller`, `VW_Dim_Date`
+
+**Fact Views**: `VW_Fact_SalesActual`, `VW_Fact_ProductSalesTarget`, `VW_Fact_SRCSalesTarget`
+
+#### Analytical Views (3 views)
+These provide pre-aggregated data optimized for visualization:
+
+- **VW_SalesPerformanceSummary**: Product sales performance by time periods with profit margins and pricing analysis
+- **VW_CustomerSalesAnalysis**: Customer demographics analysis with sales patterns by geography, gender, and channel
+- **VW_TargetVsActualPerformance**: Target vs actual performance comparison with achievement percentages
+
+### Benefits of Secure Views
+
+1. **Security**: All views are created as `SECURE VIEWS` for sharing with professors/graders
+2. **Data Protection**: Views isolate the warehouse from direct table queries
+3. **Change Insulation**: Downstream objects are protected from table structure changes
+4. **Explicit Columns**: No `SELECT *` usage for better security and performance
+5. **Business Intelligence**: Pre-aggregated analytical views optimize visualization tools
+
+### Individual View Operations
+
+Create views only:
+```bash
+python -m rahil.create_views
+```
+
+Verify views only:
+```bash
+python -m rahil.view_sample_views
+```
+
+### Using Views in Tableau
+
+1. Connect to Snowflake using your credentials
+2. Select the dimensional database (`IMT577_DW_{USER_NAME}_DIMENSION`)
+3. Use the secure views instead of direct table access
+4. Drag and drop pre-calculated metrics from analytical views
+5. Create relationships between pass-through views if needed
+
+For detailed documentation on the secure views system, see [VIEWS_README.md](VIEWS_README.md).
+
+## Complete Data Pipeline Workflow
+
+The complete data pipeline consists of three main phases:
+
+1. **Staging ETL** (from Azure Blob to staging tables)
+   ```bash
+   python -m rahil.run_etl
+   ```
+
+2. **Dimensional ETL** (from staging to dimensional model)
+   ```bash
+   python -m rahil.run_dimensional_etl
+   ```
+
+3. **Views Creation** (secure data access layer)
+   ```bash
+   python -m rahil.run_views_etl
+   ```
+
+### Running the Complete Pipeline
+
+To process data end-to-end with full data access layer:
+
+```bash
+python -m rahil.run_etl
+python -m rahil.run_dimensional_etl
+python -m rahil.run_views_etl
+```
+
+This sequence creates a complete data warehouse with staging tables, dimensional model, and secure views ready for business intelligence and sharing with professors/graders.
