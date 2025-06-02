@@ -90,7 +90,7 @@ def load_fact_tables():
         
         # Get the directory path for SQL files
         current_dir = os.path.dirname(os.path.abspath(__file__))
-        sql_dir = os.path.join(current_dir, '..', 'private_ddl', 'rahil')
+        sql_dir = os.path.join(current_dir, '..', 'private_ddl')
         
         # Common parameters for SQL file formatting
         sql_params = {
