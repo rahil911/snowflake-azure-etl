@@ -453,7 +453,7 @@ def cache_result(
     return decorator
 
 
-def invalidate_cache(
+async def invalidate_cache( # Changed to async def
     cache_name: str = 'memory',
     key: Optional[str] = None,
     key_prefix: Optional[str] = None,
@@ -479,21 +479,41 @@ def invalidate_cache(
     
     if key:
         # Invalidate specific key
-        if cache.delete_sync(key):
-            invalidated = 1
+        # Prefer async 'delete' if available and it's an async method, else use 'delete_sync'
+        if hasattr(cache, 'delete') and asyncio.iscoroutinefunction(getattr(cache, 'delete')):
+            if await cache.delete(key): # type: ignore
+                invalidated = 1
+        elif hasattr(cache, 'delete_sync'):
+            if cache.delete_sync(key): # type: ignore
+                invalidated = 1
     elif tags:
-        # Invalidate by tags (if supported)
-        if hasattr(cache, 'delete_by_tags'):
-            invalidated = asyncio.run(cache.delete_by_tags(tags))
+        # Invalidate by tags (if supported and async)
+        if hasattr(cache, 'delete_by_tags') and asyncio.iscoroutinefunction(getattr(cache, 'delete_by_tags')):
+            invalidated = await cache.delete_by_tags(tags) # type: ignore
+        # Add a sync fallback if one existed or was intended for other cache types
+        # For now, this relies on delete_by_tags being async as per MemoryCache.
     elif key_prefix:
         # Invalidate by prefix
+        # MemoryCache.keys() is synchronous. This part of the logic remains internally synchronous.
+        # If a cache implementation offers async key iteration, this could be further optimized.
         keys_to_delete = [k for k in cache.keys() if k.startswith(key_prefix)]
-        for k in keys_to_delete:
-            if cache.delete_sync(k):
-                invalidated += 1
+        for k_to_delete in keys_to_delete:
+            # Prefer async 'delete' if available, else use 'delete_sync'
+            if hasattr(cache, 'delete') and asyncio.iscoroutinefunction(getattr(cache, 'delete')):
+                if await cache.delete(k_to_delete): # type: ignore
+                    invalidated += 1
+            elif hasattr(cache, 'delete_sync'):
+                if cache.delete_sync(k_to_delete): # type: ignore
+                    invalidated += 1
     else:
         # Clear entire cache
-        asyncio.run(cache.clear())
+        # Prefer async 'clear' if available
+        if hasattr(cache, 'clear') and asyncio.iscoroutinefunction(getattr(cache, 'clear')):
+            await cache.clear() # type: ignore
+        elif hasattr(cache, 'clear_sync'): # Assuming a clear_sync might exist for some
+            cache.clear_sync() # type: ignore
+        elif hasattr(cache, 'clear'): # If 'clear' is not async but exists (e.g. from BaseCache not overridden as async)
+            cache.clear() # type: ignore
         invalidated = -1  # Indicate full clear
     
     return invalidated

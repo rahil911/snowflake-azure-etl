@@ -147,6 +147,55 @@ class StagingChannel(BaseTableModel, AuditFieldsMixin):
     channel_name: Optional[str] = Field(None, alias="CHANNELNAME", description="Channel name")
 
 
+class StagingChannelCategory(BaseTableModel, AuditFieldsMixin):
+    """Model for STAGING_CHANNELCATEGORY table."""
+    channel_category_id: Optional[int] = Field(None, alias="CHANNELCATEGORYID", description="Channel category identifier")
+    channel_category: Optional[str] = Field(None, alias="CHANNELCATEGORY", description="Channel category name")
+
+
+class StagingProductCategory(BaseTableModel, AuditFieldsMixin):
+    """Model for STAGING_PRODUCTCATEGORY table."""
+    product_category_id: Optional[int] = Field(None, alias="PRODUCTCATEGORYID", description="Product category identifier")
+    product_category: Optional[str] = Field(None, alias="PRODUCTCATEGORY", description="Product category name")
+
+
+class StagingProductType(BaseTableModel, AuditFieldsMixin):
+    """Model for STAGING_PRODUCTTYPE table."""
+    product_type_id: Optional[int] = Field(None, alias="PRODUCTTYPEID", description="Product type identifier")
+    product_category_id: Optional[int] = Field(None, alias="PRODUCTCATEGORYID", description="Associated product category identifier")
+    product_type: Optional[str] = Field(None, alias="PRODUCTTYPE", description="Product type name")
+
+
+class StagingReseller(BaseTableModel, AuditFieldsMixin):
+    """Model for STAGING_RESELLER table."""
+    reseller_id: Optional[str] = Field(None, alias="RESELLERID", description="Unique reseller identifier")
+    contact: Optional[str] = Field(None, alias="CONTACT", description="Contact person name")
+    email_address: Optional[str] = Field(None, alias="EMAILADDRESS", description="Email address")
+    address: Optional[str] = Field(None, alias="ADDRESS", description="Street address")
+    city: Optional[str] = Field(None, alias="CITY", description="City")
+    state_province: Optional[str] = Field(None, alias="STATEPROVINCE", description="State or province")
+    country: Optional[str] = Field(None, alias="COUNTRY", description="Country")
+    postal_code: Optional[int] = Field(None, alias="POSTALCODE", description="Postal code") # DDL: INTEGER
+    phone_number: Optional[str] = Field(None, alias="PHONENUMBER", description="Phone number")
+    reseller_name: Optional[str] = Field(None, alias="RESELLERNAME", description="Reseller name")
+
+
+class StagingTargetDataChannel(BaseTableModel): # No AuditFieldsMixin
+    """Model for STAGING_TARGETDATACHANNEL table."""
+    year: Optional[int] = Field(None, alias="YEAR", description="Target year")
+    channel_name: Optional[str] = Field(None, alias="CHANNELNAME", description="Channel name")
+    target_name: Optional[str] = Field(None, alias="TARGETNAME", description="Name of the target")
+    target_sales_amount: Optional[int] = Field(None, alias="TARGETSALESAMOUNT", description="Target sales amount") # DDL: INTEGER
+
+
+class StagingTargetDataProduct(BaseTableModel): # No AuditFieldsMixin
+    """Model for STAGING_TARGETDATAPRODUCT table."""
+    product_id: Optional[int] = Field(None, alias="PRODUCTID", description="Product identifier") # DDL: INTEGER
+    product: Optional[str] = Field(None, alias="PRODUCT", description="Product name or description")
+    year: Optional[int] = Field(None, alias="YEAR", description="Target year")
+    sales_quantity_target: Optional[int] = Field(None, alias="SALESQUANTITYTARGET", description="Target sales quantity") # DDL: INTEGER
+
+
 # =============================================================================
 # Dimension Table Models
 # =============================================================================
@@ -156,31 +205,39 @@ class DimCustomer(BaseTableModel):
     
     dim_customer_id: int = Field(..., alias="DIMCUSTOMERID", description="Dimension customer ID")
     customer_id: str = Field(..., alias="CUSTOMERID", description="Business customer ID")
+    dim_location_id: Optional[int] = Field(None, alias="DIMLOCATIONID", description="Dimension location ID")
+    customer_full_name: Optional[str] = Field(None, alias="CUSTOMERFULLNAME", description="Customer full name")
     first_name: Optional[str] = Field(None, alias="FIRSTNAME", description="First name")
     last_name: Optional[str] = Field(None, alias="LASTNAME", description="Last name")
     gender: Optional[str] = Field(None, alias="GENDER", description="Gender")
-    email_address: Optional[str] = Field(None, alias="EMAILADDRESS", description="Email address")
-    phone_number: Optional[str] = Field(None, alias="PHONENUMBER", description="Phone number")
 
 
 class DimProduct(BaseTableModel):
     """Model for DIM_PRODUCT dimension table."""
     
     dim_product_id: int = Field(..., alias="DIMPRODUCTID", description="Dimension product ID")
-    product_id: str = Field(..., alias="PRODUCTID", description="Business product ID")
-    product_type_id: Optional[int] = Field(None, alias="PRODUCTTYPEID", description="Product type")
-    product_category_id: Optional[int] = Field(None, alias="PRODUCTCATEGORYID", description="Product category")
+    product_id: Optional[int] = Field(None, alias="PRODUCTID", description="Business product ID") # Changed type from str
+    product_type_id: Optional[int] = Field(None, alias="PRODUCTTYPEID", description="Product type ID from DDL")
+    product_category_id: Optional[int] = Field(None, alias="PRODUCTCATEGORYID", description="Product category ID from DDL")
     product_name: Optional[str] = Field(None, alias="PRODUCTNAME", description="Product name")
-    product_brand: Optional[str] = Field(None, alias="PRODUCTBRAND", description="Product brand")
+    # product_brand removed
     product_retail_price: Optional[float] = Field(None, alias="PRODUCTRETAILPRICE", description="Retail price")
     product_wholesale_price: Optional[float] = Field(None, alias="PRODUCTWHOLESALEPRICE", description="Wholesale price")
+    product_type: Optional[str] = Field(None, alias="PRODUCTTYPE", description="Product type")
+    product_category: Optional[str] = Field(None, alias="PRODUCTCATEGORY", description="Product category")
+    product_cost: Optional[float] = Field(None, alias="PRODUCTCOST", description="Product cost")
+    product_retail_profit: Optional[float] = Field(None, alias="PRODUCTRETAILPROFIT", description="Product retail profit")
+    product_wholesale_unit_profit: Optional[float] = Field(None, alias="PRODUCTWHOLESALEUNITPROFIT", description="Product wholesale unit profit")
+    product_profit_margin_unit_percent: Optional[float] = Field(None, alias="PRODUCTPROFITMARGINUNITPERCENT", description="Product profit margin unit percent")
 
 
 class DimStore(BaseTableModel):
     """Model for DIM_STORE dimension table."""
     
     dim_store_id: int = Field(..., alias="DIMSTOREID", description="Dimension store ID")
-    store_id: str = Field(..., alias="STOREID", description="Business store ID")
+    store_id: Optional[int] = Field(None, alias="STOREID", description="Business store ID") # Changed type from str
+    dim_location_id: Optional[int] = Field(None, alias="DIMLOCATIONID", description="Dimension location ID")
+    source_store_id: Optional[int] = Field(None, alias="SOURCESTOREID", description="Source store ID")
     store_number: Optional[str] = Field(None, alias="STORENUMBER", description="Store number")
     store_name: Optional[str] = Field(None, alias="STORENAME", description="Store name")
     store_manager: Optional[str] = Field(None, alias="STOREMANAGER", description="Store manager")
@@ -190,26 +247,49 @@ class DimDate(BaseTableModel):
     """Model for DIM_DATE dimension table."""
     
     date_pkey: int = Field(..., alias="DATE_PKEY", description="Date primary key")
-    calendar_date: date = Field(..., alias="DATE", description="Calendar date")
-    full_date_desc: Optional[str] = Field(None, alias="FULLDATEDESC", description="Full date description")
-    day_of_week: Optional[int] = Field(None, alias="DAYOFWEEK", description="Day of week (1-7)")
-    day_name: Optional[str] = Field(None, alias="DAYNAME", description="Day name")
-    day_of_month: Optional[int] = Field(None, alias="DAYOFMONTH", description="Day of month")
-    day_of_year: Optional[int] = Field(None, alias="DAYOFYEAR", description="Day of year")
-    week_of_year: Optional[int] = Field(None, alias="WEEKOFYEAR", description="Week of year")
-    month_name: Optional[str] = Field(None, alias="MONTHNAME", description="Month name")
-    month_of_year: Optional[int] = Field(None, alias="MONTHOFYEAR", description="Month of year")
-    quarter: Optional[int] = Field(None, alias="QUARTER", description="Quarter")
-    year: Optional[int] = Field(None, alias="YEAR", description="Year")
-    is_weekend: Optional[bool] = Field(None, alias="ISWEEKEND", description="Is weekend flag")
+    calendar_date: date = Field(..., alias="DATE", description="Calendar date") # DDL: DATE date not null
+    full_date_desc: str = Field(..., alias="FULL_DATE_DESC", description="Full date description") # DDL: varchar(64) not null
+    day_num_in_week: int = Field(..., alias="DAY_NUM_IN_WEEK", description="Day number in week") # DDL: number(1) not null
+    day_name: str = Field(..., alias="DAY_NAME", description="Day name") # DDL: varchar(10) not null
+    day_num_in_month: int = Field(..., alias="DAY_NUM_IN_MONTH", description="Day number in month") # DDL: number(2) not null
+    day_num_in_year: int = Field(..., alias="DAY_NUM_IN_YEAR", description="Day number in year") # DDL: number(3) not null
+    week_num_in_year: int = Field(..., alias="WEEK_NUM_IN_YEAR", description="Week number in year") # DDL: number(9) not null
+    month_name: str = Field(..., alias="MONTH_NAME", description="Month name") # DDL: varchar(10) not null
+    month_num_in_year: int = Field(..., alias="MONTH_NUM_IN_YEAR", description="Month number in year") # DDL: number(2) not null
+    quarter: int = Field(..., alias="QUARTER", description="Quarter") # DDL: number(1) not null
+    year: int = Field(..., alias="YEAR", description="Year") # DDL: number(5) not null
+    weekday_ind: str = Field(..., alias="WEEKDAY_IND", description="Indicator if it is a weekday or not") # DDL: varchar(64) not null
 
 
 class DimChannel(BaseTableModel):
     """Model for DIM_CHANNEL dimension table."""
     
     dim_channel_id: int = Field(..., alias="DIMCHANNELID", description="Dimension channel ID")
-    channel_id: str = Field(..., alias="CHANNELID", description="Business channel ID")
-    channel_name: Optional[str] = Field(None, alias="CHANNELNAME", description="Channel name")
+    channel_id: Optional[int] = Field(None, alias="CHANNELID", description="Business channel ID") # Changed type from str, DDL: INT
+    channel_category_id: Optional[int] = Field(None, alias="CHANNELCATEGORYID", description="Channel category ID") # DDL: INT
+    channel_name: Optional[str] = Field(None, alias="CHANNELNAME", description="Channel name") # DDL: VARCHAR
+    channel_category: Optional[str] = Field(None, alias="CHANNELCATEGORY", description="Channel category name") # DDL: VARCHAR
+
+
+class DimLocation(BaseTableModel):
+    """Model for DIM_LOCATION dimension table."""
+    dim_location_id: int = Field(..., alias="DIMLOCATIONID", description="Dimension location ID (Primary Key)")
+    address: Optional[str] = Field(None, alias="ADDRESS", description="Street address")
+    city: Optional[str] = Field(None, alias="CITY", description="City name")
+    postal_code: Optional[str] = Field(None, alias="POSTALCODE", description="Postal code")
+    state_province: Optional[str] = Field(None, alias="STATE_PROVINCE", description="State or province name")
+    country: Optional[str] = Field(None, alias="COUNTRY", description="Country name")
+
+
+class DimReseller(BaseTableModel):
+    """Model for DIM_RESELLER dimension table."""
+    dim_reseller_id: int = Field(..., alias="DIMRESELLERID", description="Dimension reseller ID (Primary Key)")
+    reseller_id: Optional[str] = Field(None, alias="RESELLERID", description="Business reseller ID")
+    dim_location_id: Optional[int] = Field(None, alias="DIMLOCATIONID", description="Dimension location ID (Foreign Key)")
+    reseller_name: Optional[str] = Field(None, alias="RESELLERNAME", description="Reseller name")
+    contact_name: Optional[str] = Field(None, alias="CONTACTNAME", description="Contact person's name")
+    phone_number: Optional[str] = Field(None, alias="PHONENUMBER", description="Phone number")
+    email: Optional[str] = Field(None, alias="EMAIL", description="Email address")
 
 
 # =============================================================================
@@ -240,6 +320,22 @@ class FactSalesActual(BaseTableModel):
         if v is not None and v < 0:
             raise ValueError('Monetary values should be positive')
         return v
+
+
+class FactProductSalesTarget(BaseTableModel):
+    """Model for FACT_PRODUCTSALESTARGET fact table."""
+    dim_product_id: int = Field(..., alias="DIMPRODUCTID", description="Dimension Product ID")
+    dim_target_date_id: int = Field(..., alias="DIMTARGETDATEID", description="Dimension Target Date ID")
+    product_target_sales_quantity: Optional[int] = Field(None, alias="PRODUCTTARGETSALESQUANTITY", description="Target sales quantity for the product")
+
+
+class FactSrcSalesTarget(BaseTableModel):
+    """Model for FACT_SRCSALESTARGET fact table."""
+    dim_store_id: int = Field(..., alias="DIMSTOREID", description="Dimension Store ID")
+    dim_reseller_id: int = Field(..., alias="DIMRESELLERID", description="Dimension Reseller ID")
+    dim_channel_id: int = Field(..., alias="DIMCHANNELID", description="Dimension Channel ID")
+    dim_target_date_id: int = Field(..., alias="DIMTARGETDATEID", description="Dimension Target Date ID")
+    sales_target_amount: Optional[float] = Field(None, alias="SALESTARGETAMOUNT", description="Target sales amount")
 
 
 # =============================================================================
@@ -473,12 +569,22 @@ def get_model_for_table(table_name: str) -> Optional[type]:
         'STAGING_SALESHEADER': StagingSalesHeader,
         'STAGING_SALESDETAIL': StagingSalesDetail,
         'STAGING_CHANNEL': StagingChannel,
+        'STAGING_CHANNELCATEGORY': StagingChannelCategory,
+        'STAGING_PRODUCTCATEGORY': StagingProductCategory,
+        'STAGING_PRODUCTTYPE': StagingProductType,
+        'STAGING_RESELLER': StagingReseller,
+        'STAGING_TARGETDATACHANNEL': StagingTargetDataChannel,
+        'STAGING_TARGETDATAPRODUCT': StagingTargetDataProduct,
         'DIM_CUSTOMER': DimCustomer,
         'DIM_PRODUCT': DimProduct,
         'DIM_STORE': DimStore,
         'DIM_DATE': DimDate,
         'DIM_CHANNEL': DimChannel,
+        'DIM_LOCATION': DimLocation,
+        'DIM_RESELLER': DimReseller,
         'FACT_SALESACTUAL': FactSalesActual,
+        'FACT_PRODUCTSALESTARGET': FactProductSalesTarget,
+        'FACT_SRCSALESTARGET': FactSrcSalesTarget,
     }
     return table_models.get(table_name.upper())
 

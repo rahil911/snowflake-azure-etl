@@ -177,46 +177,37 @@ class SnowflakeQueryExecutor:
             
             self.logger.info(f"Executing {query_type.value} query (ID: {query_id})")
             
-            # Check cache for SELECT queries
+            data: Any
+            was_cached = False # Default, as decorator does not signal cache status to caller
+
             if query_type == QueryType.SELECT:
-                cached_result = await self._check_query_cache(sanitized_query, parameters)
-                if cached_result:
-                    execution_time = (time.time() - start_time) * 1000
-                    self._update_metrics(query_type, execution_time, True)
-                    
-                    result = QueryResult(
-                        data=cached_result,
-                        query=query,
-                        execution_time_ms=execution_time,
-                        row_count=len(cached_result) if isinstance(cached_result, list) else 0,
-                        query_type=query_type,
-                        cached=True
-                    )
-                    
-                    self._add_to_history(result)
-                    return result.to_dict()
-            
-            # Execute query
-            query_task = asyncio.create_task(
-                self._execute_query_internal(sanitized_query, parameters, timeout)
-            )
-            
-            self._active_queries[query_id] = query_task
-            
-            try:
-                data = await query_task
-            finally:
-                self._active_queries.pop(query_id, None)
-            
+                # SELECT queries go through the cached internal method
+                query_task = asyncio.create_task(
+                    self._execute_query_internal(sanitized_query, parameters, timeout)
+                )
+                self._active_queries[query_id] = query_task
+                try:
+                    data = await query_task
+                    # Note: was_cached remains False here. The decorator handles caching transparently.
+                    # If the decorator itself logged cache hits/misses, that would be separate.
+                finally:
+                    self._active_queries.pop(query_id, None)
+            else:
+                # Non-SELECT queries bypass the caching layer
+                query_task = asyncio.create_task(
+                    self.connection_manager.execute_query(sanitized_query, parameters, timeout)
+                )
+                self._active_queries[query_id] = query_task
+                try:
+                    data = await query_task
+                finally:
+                    self._active_queries.pop(query_id, None)
+
             execution_time = (time.time() - start_time) * 1000
             row_count = len(data) if isinstance(data, list) else 0
             
-            # Cache SELECT query results
-            if query_type == QueryType.SELECT and row_count > 0:
-                await self._cache_query_result(sanitized_query, parameters, data)
-            
-            # Update metrics
-            self._update_metrics(query_type, execution_time, False)
+            # Update metrics; was_cached is False as we don't get this info from the decorator here
+            self._update_metrics(query_type, execution_time, was_cached)
             
             # Create result
             result = QueryResult(
@@ -225,7 +216,8 @@ class SnowflakeQueryExecutor:
                 execution_time_ms=execution_time,
                 row_count=row_count,
                 query_type=query_type,
-                cached=False
+                cached=was_cached # Will be False. Comment can explain cache is transparent.
+                                 # If SELECT, it might have been from cache, but we don't flag it here.
             )
             
             self._add_to_history(result)
@@ -251,35 +243,20 @@ class SnowflakeQueryExecutor:
             
             raise
     
+    @cache_query_result(ttl=300, cache_name="query_cache")
     async def _execute_query_internal(
         self,
         query: str,
         parameters: Optional[Dict[str, Any]] = None,
         timeout: Optional[float] = None
-    ) -> Any:
-        """Internal query execution."""
+    ) -> Any: # Returns just data; decorator handles caching transparently
+        """
+        Internal query execution for SELECT queries, decorated with @cache_query_result.
+        The decorator handles the caching mechanism. This method only fetches data if not cached.
+        """
         return await self.connection_manager.execute_query(query, parameters, timeout)
-    
-    @cache_query_result(ttl=300, cache_name="query_cache")
-    async def _check_query_cache(
-        self,
-        query: str,
-        parameters: Optional[Dict[str, Any]] = None
-    ) -> Optional[Any]:
-        """Check if query result is cached."""
-        # Cache key is generated automatically by decorator
-        return None  # Return None to indicate cache miss
-    
-    async def _cache_query_result(
-        self,
-        query: str,
-        parameters: Optional[Dict[str, Any]] = None,
-        data: Any = None
-    ) -> None:
-        """Cache query result."""
-        # Caching is handled by decorator in actual execution
-        pass
-    
+
+
     async def execute_streaming_query(
         self,
         query: str,

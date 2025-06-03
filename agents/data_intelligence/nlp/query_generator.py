@@ -17,6 +17,7 @@ Features:
 
 import re
 import json
+from collections import defaultdict # Added for parameter counting
 from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional, Set, Tuple
 from dataclasses import dataclass
@@ -544,7 +545,7 @@ class QueryGenerator:
         # Build components
         metrics = self._build_metrics_clause(analysis)
         joins = " ".join(analysis["requires_joins"])
-        where_clause = self._build_where_clause(analysis)
+        where_clause_str, query_params = self._build_where_clause(analysis) # Modified to get params
         group_by = self._build_group_by_clause(analysis)
         having_clause = self._build_having_clause(analysis)
         order_by = analysis.get("order_by", "total_sales DESC")
@@ -575,7 +576,7 @@ class QueryGenerator:
             substitutions = {
                 "product_metrics": ", ".join(template["default_metrics"]),
                 "additional_joins": joins.replace("INNER JOIN DIM_PRODUCT p ON f.PRODUCT_KEY = p.PRODUCT_KEY", ""),
-                "where_clause": where_clause,
+                "where_clause": where_clause_str, # Use the string part
                 "having_clause": having_clause,
                 "order_by_clause": order_by,
                 "limit_clause": limit_clause
@@ -585,7 +586,7 @@ class QueryGenerator:
             substitutions = {
                 "metrics": metrics,
                 "joins": joins,
-                "where_clause": where_clause,
+                "where_clause": where_clause_str, # Use the string part
                 "group_by_clause": group_by,
                 "having_clause": having_clause,
                 "order_by_clause": order_by,
@@ -612,7 +613,7 @@ class QueryGenerator:
         
         return SQLQuery(
             sql=sql,
-            parameters={},  # Parameters would be used for parameterized queries
+            parameters=query_params,  # Pass the collected parameters
             table_references=table_references,
             complexity=complexity,
             confidence=confidence,
@@ -648,30 +649,54 @@ class QueryGenerator:
         else:
             return ", ".join(default_metrics)
     
-    def _build_where_clause(self, analysis: Dict[str, Any]) -> str:
-        """Build the WHERE clause."""
+    def _build_where_clause(self, analysis: Dict[str, Any]) -> Tuple[str, Dict[str, Any]]:
+        """Build the WHERE clause and parameters for parameterized queries."""
         
         conditions = []
-        
-        # Add time filters
+        params: Dict[str, Any] = {}
+        param_counters: Dict[str, int] = defaultdict(int)
+
+        # Helper to generate unique param names
+        def get_param_name(base_name: str) -> str:
+            param_counters[base_name] += 1
+            return f"{base_name}_{param_counters[base_name]}"
+
+        # Add time filters (assuming these are safe or will be parameterized if they become dynamic)
+        # Current time_filters are hardcoded SQL snippets from business_mappings (e.g., "d.YEAR = 2023")
+        # If these become dynamic based on user input values, they too would need parameterization.
+        # For this subtask, focusing on dim_value parameterization as per example.
         if analysis["time_filters"]:
             conditions.extend(analysis["time_filters"])
         
         # Add dimension filters
         for dim_type, dim_value in analysis["dimension_filters"].items():
+            if not dim_value: # Skip if dim_value is empty or None
+                continue
+
+            param_value = f"%{dim_value}%" # Common pattern for ILIKE
+
             if dim_type == "product":
-                conditions.append(f"p.PRODUCT_NAME ILIKE '%{dim_value}%'")
+                param_key = get_param_name("product_name")
+                conditions.append(f"p.PRODUCT_NAME ILIKE %({param_key})s")
+                params[param_key] = param_value
             elif dim_type == "customer":
-                conditions.append(f"c.CUSTOMER_NAME ILIKE '%{dim_value}%'")
+                param_key = get_param_name("customer_name")
+                conditions.append(f"c.CUSTOMER_NAME ILIKE %({param_key})s")
+                params[param_key] = param_value
             elif dim_type == "store":
-                conditions.append(f"s.STORE_NAME ILIKE '%{dim_value}%'")
+                param_key = get_param_name("store_name")
+                conditions.append(f"s.STORE_NAME ILIKE %({param_key})s")
+                params[param_key] = param_value
             elif dim_type == "channel":
-                conditions.append(f"ch.CHANNEL_NAME ILIKE '%{dim_value}%'")
+                param_key = get_param_name("channel_name")
+                conditions.append(f"ch.CHANNEL_NAME ILIKE %({param_key})s")
+                params[param_key] = param_value
         
+        where_clause_str = ""
         if conditions:
-            return "WHERE " + " AND ".join(conditions)
-        else:
-            return ""
+            where_clause_str = "WHERE " + " AND ".join(conditions)
+
+        return where_clause_str, params
     
     def _build_group_by_clause(self, analysis: Dict[str, Any]) -> str:
         """Build the GROUP BY clause."""

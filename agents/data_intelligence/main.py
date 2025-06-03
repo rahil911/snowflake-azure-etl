@@ -80,8 +80,8 @@ class DataIntelligenceAgent(BaseAgent):
         self.metrics = get_metrics_collector()
         self.cache = get_cache_manager()
         
-        # Initialize components
-        self._initialize_components()
+        # Components will be initialized in the async initialize() method
+        # self._initialize_components()
         
         # Performance tracking
         self.query_counter = self.metrics.counter("di_queries_total")
@@ -89,9 +89,15 @@ class DataIntelligenceAgent(BaseAgent):
         self.error_counter = self.metrics.counter("di_queries_failed")
         self.response_timer = self.metrics.timer("di_response_time")
         
-        self.logger.info(f"Data Intelligence Agent {agent_id} initialized successfully")
+        self.logger.info(f"Data Intelligence Agent {agent_id} instance created. Call initialize() for async setup.")
     
-    def _initialize_components(self) -> None:
+    async def initialize(self):
+        """Asynchronously initialize agent components."""
+        await self._initialize_components()
+        # Any other async setup needed for the agent itself can go here
+        self.logger.info(f"Data Intelligence Agent {self.agent_id} has been fully initialized asynchronously.")
+
+    async def _initialize_components(self) -> None: # Changed to async
         """Initialize all data intelligence components."""
         try:
             # NLP Components
@@ -105,7 +111,9 @@ class DataIntelligenceAgent(BaseAgent):
             self.recommendation_engine = RecommendationEngine()
             
             # Data Components
-            self.sql_executor = SQLExecutor()
+            self.sql_executor = SQLExecutor(self.settings) # Pass settings
+            if hasattr(self.sql_executor, 'initialize_connector'): # Ensure the new method exists
+                await self.sql_executor.initialize_connector() # Await the new async method
             self.result_processor = ResultProcessor()
             self.quality_analyzer = QualityAnalyzer()
             

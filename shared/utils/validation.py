@@ -328,7 +328,17 @@ class InputValidator:
 
 
 class SQLValidator:
-    """SQL query validation and security checks."""
+    """
+    SQL query validation and security checks.
+
+    IMPORTANT: This validator acts as a policy checker for SQL query structure
+    (e.g., disallowing certain keywords in read-only contexts, checking for complexity)
+    and aims to detect *some* common anti-patterns or potential vulnerabilities.
+    It is **NOT a substitute for proper SQL injection prevention mechanisms
+    like parameterized queries (prepared statements)**. It should be used as a
+    defense-in-depth measure, not as the primary security control against
+    SQL injection.
+    """
     
     DANGEROUS_KEYWORDS = {
         'DROP', 'DELETE', 'TRUNCATE', 'ALTER', 'CREATE', 'INSERT', 'UPDATE',
@@ -590,7 +600,16 @@ class DataQualityChecker:
 
 
 def sanitize_input(text: str, max_length: Optional[int] = None, allow_html: bool = False) -> str:
-    """Sanitize user input for security."""
+    """
+    Sanitize user input for general cleaning and basic security.
+
+    IMPORTANT: This function is intended for general input cleaning (e.g., for
+    display purposes, simple string inputs, or preventing basic Cross-Site Scripting (XSS)
+    if `allow_html=False`). It is **NOT A DEFENSE AGAINST SQL INJECTION**.
+    For constructing SQL queries with variable data, parameterized queries
+    (prepared statements) **MUST** be used. Relying on this function for
+    SQL security will leave your application vulnerable.
+    """
     if not text:
         return ""
     

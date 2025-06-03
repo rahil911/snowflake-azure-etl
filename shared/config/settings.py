@@ -38,7 +38,7 @@ class DatabaseConfig(BaseModel):
     account: str = Field(..., description="Snowflake account identifier")
     
     # Connection behavior
-    role: Optional[str] = Field(default=None, description="Database role")
+    role: str = Field(default_factory=lambda: os.getenv('APP_SNOWFLAKE_ROLE', 'APPLICATION_ROLE'), description="Database role")
     autocommit: bool = Field(default=True, description="Enable autocommit")
     client_session_keep_alive: bool = Field(default=True, description="Keep session alive")
     
@@ -185,7 +185,6 @@ class Settings(BaseSettings):
     SNOWFLAKE_DATABASE: str = Field(..., env='SNOWFLAKE_DATABASE')
     SNOWFLAKE_WAREHOUSE: str = Field(..., env='SNOWFLAKE_WAREHOUSE')
     SNOWFLAKE_SCHEMA: str = Field(default='PUBLIC', env='SNOWFLAKE_SCHEMA')
-    SNOWFLAKE_ROLE: Optional[str] = Field(default=None, env='SNOWFLAKE_ROLE')
     
     # Google GenAI configuration
     GOOGLE_GENAI_API_KEY: SecretStr = Field(..., env='GOOGLE_GENAI_API_KEY')
@@ -195,6 +194,13 @@ class Settings(BaseSettings):
         default="customers,products,stores,sales",
         env='ENTITIES_LIST'
     )
+
+    # MCP Server Configurations
+    MCP_SNOWFLAKE_SERVER_ENDPOINT: str = Field(default="http://localhost:8001", env="MCP_SNOWFLAKE_SERVER_ENDPOINT")
+    MCP_ANALYTICS_SERVER_ENDPOINT: str = Field(default="http://localhost:8002", env="MCP_ANALYTICS_SERVER_ENDPOINT")
+    MCP_SNOWFLAKE_API_KEY: Optional[SecretStr] = Field(default=None, env="MCP_SNOWFLAKE_API_KEY")
+    MCP_SERVER_DEFAULT_TIMEOUT_SECONDS: int = Field(default=30, env="MCP_SERVER_DEFAULT_TIMEOUT_SECONDS")
+    MCP_SERVER_MAX_CONCURRENT_REQUESTS: int = Field(default=10, env="MCP_SERVER_MAX_CONCURRENT_REQUESTS")
     
     # Component configurations
     database: Optional[DatabaseConfig] = None
@@ -220,8 +226,8 @@ class Settings(BaseSettings):
                 schema=self.SNOWFLAKE_SCHEMA,
                 username=self.SNOWFLAKE_USERNAME,
                 password=self.SNOWFLAKE_PASSWORD,
-                account=self.SNOWFLAKE_ACCOUNT,
-                role=self.SNOWFLAKE_ROLE
+                account=self.SNOWFLAKE_ACCOUNT
+                # role is now handled by DatabaseConfig default_factory
             )
         
         if self.genai is None:

@@ -24,6 +24,8 @@ from shared.base.agent_base import BaseAgent
 from shared.utils.caching import get_cache_manager
 from shared.utils.metrics import get_metrics_collector
 from shared.config.settings import Settings
+# Assuming MCPServerConnector is in this path, adjust if necessary
+from agents.coordinator.mcp.server_connector import MCPServerConnector, MCPResponse # Assuming MCPResponse might also be needed
 
 logger = logging.getLogger(__name__)
 
@@ -144,9 +146,29 @@ class SQLExecutor:
         self._setup_security_rules()
         
         # MCP client for database operations
-        self.mcp_client = None
+        self.mcp_connector = MCPServerConnector(settings=self.settings) # Pass settings
+        # If MCPServerConnector requires async initialization, it might need to be handled
+        # in an async __init__ or a separate setup method for the agent.
+        # For now, assuming synchronous instantiation is sufficient as per subtask.
         
         logger.info("SQL Executor initialized")
+
+    async def initialize_connector(self):
+        """Initializes and connects the MCP connector."""
+        try:
+            if hasattr(self.mcp_connector, 'initialize_from_config') and asyncio.iscoroutinefunction(self.mcp_connector.initialize_from_config):
+                await self.mcp_connector.initialize_from_config()
+            elif hasattr(self.mcp_connector, 'initialize_from_config'): # Sync fallback if any
+                self.mcp_connector.initialize_from_config()
+
+            if hasattr(self.mcp_connector, 'connect_all') and asyncio.iscoroutinefunction(self.mcp_connector.connect_all):
+                await self.mcp_connector.connect_all()
+            elif hasattr(self.mcp_connector, 'connect_all'): # Sync fallback if any
+                self.mcp_connector.connect_all()
+            logger.info("MCPServerConnector initialization and connection process initiated.")
+        except Exception as e:
+            logger.error(f"Error during MCPServerConnector initialization: {e}", exc_info=True)
+            # Depending on policy, might re-raise or handle to allow agent to run degraded
 
     def _setup_query_patterns(self):
         """Setup regex patterns for query analysis."""
@@ -595,44 +617,64 @@ class SQLExecutor:
         return suggestions
 
     async def _execute_through_mcp(self, request: QueryRequest, validation: QueryValidationResult) -> QueryExecutionResult:
-        """Execute query through MCP server."""
+        """Execute query through MCP server using MCPServerConnector."""
         try:
-            # Here we would call the MCP server - for now, simulate
-            # In real implementation: result = await self.mcp_client.call_tool("execute_sql", params)
-            
-            # Simulate execution
-            await asyncio.sleep(0.1)  # Simulate network latency
-            
-            # Create mock result for demonstration
-            if validation.query_type == QueryType.SELECT:
-                # Simulate data result
-                data = pd.DataFrame({
-                    'id': [1, 2, 3],
-                    'value': [100, 200, 300],
-                    'category': ['A', 'B', 'C']
-                })
+            # This 'params' dict is the data payload for the MCP method.
+            # It should contain what SnowflakeQueryExecutor.execute_query expects as arguments.
+            mcp_method_params = {
+                "query": request.query,
+                "parameters": request.parameters,
+                "limit": request.max_rows,
+                "timeout": request.timeout # SQL execution timeout
+            }
+
+            # Send request to the snowflake_server via MCP
+            mcp_response: MCPResponse = await self.mcp_connector.send_request(
+                server_id="snowflake_server",       # Maps to 'server_id' in MCPServerConnector.send_request
+                method="execute_query",          # Maps to 'method' (endpoint name)
+                params=mcp_method_params,        # Maps to 'params' (data payload for the method)
+                timeout=request.timeout + 5      # Optional: MCP communication timeout, slightly longer than SQL
+            )
+
+            if mcp_response.success and mcp_response.result:
+                # Adapt the result from SnowflakeQueryExecutor (which is a dict)
+                # to QueryExecutionResult
+                snowflake_exec_result = mcp_response.result
+                data_list = snowflake_exec_result.get('data', [])
+                df = pd.DataFrame(data_list) if data_list else pd.DataFrame()
                 
+                # execution_time_ms from SnowflakeQueryExecutor, convert to seconds for QueryExecutionResult
+                execution_time_seconds = snowflake_exec_result.get('execution_time_ms', 0.0) / 1000.0
+
                 return QueryExecutionResult(
                     success=True,
-                    data=data,
-                    row_count=len(data),
+                    data=df,
+                    row_count=snowflake_exec_result.get('row_count', 0),
+                    execution_time=execution_time_seconds,
+                    query_id=request.query, # Or use one from snowflake_exec_result if available and preferred
+                    cache_hit=snowflake_exec_result.get('cached', False), # Use 'cached' flag from Snowflake executor
+                    warnings=snowflake_exec_result.get('warnings', []), # Assuming warnings might be part of result
+                    errors=[], # No errors if success is true from MCP
                     metadata={
-                        'columns': list(data.columns),
-                        'data_types': data.dtypes.to_dict()
+                        'query_type': snowflake_exec_result.get('query_type'),
+                        'mcp_timestamp': snowflake_exec_result.get('timestamp'),
+                        # Add any other relevant metadata from snowflake_exec_result
                     }
                 )
             else:
-                # Non-SELECT queries
+                error_message = mcp_response.error_message or "MCP request failed without specific error message."
+                logger.error(f"MCP request to snowflake_server failed: {error_message}. Result: {mcp_response.result}")
                 return QueryExecutionResult(
-                    success=True,
-                    row_count=1,
-                    metadata={'affected_rows': 1}
+                    success=False,
+                    errors=[error_message],
+                    metadata=mcp_response.result or {} # Include partial result/error details if any
                 )
                 
         except Exception as e:
+            logger.exception(f"Exception during _execute_through_mcp for query: {request.query[:100]}")
             return QueryExecutionResult(
                 success=False,
-                errors=[f"MCP execution error: {str(e)}"]
+                errors=[f"SQLExecutor MCP communication error: {str(e)}"]
             )
 
     async def _execute_transaction(self, batch: QueryBatch) -> List[QueryExecutionResult]:

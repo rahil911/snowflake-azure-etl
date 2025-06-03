@@ -27,34 +27,36 @@ from shared.utils.validation import validate_sql_query, sanitize_input
 from shared.utils.metrics import get_metrics_collector
 from shared.utils.caching import cache_result
 
-# Import existing config patterns
-import sys
-sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', 'rahil'))
-import config as rahil_config
+# Removed direct import of rahil_config
+
+_global_snowflake_manager: Optional["SnowflakeConnectionManager"] = None
+_manager_lock = asyncio.Lock() # For async singleton initialization
 
 
 class SnowflakeConnectionConfig(ConnectionConfig):
     """Snowflake-specific connection configuration."""
     
     def __init__(self, **kwargs):
-        # Load from existing rahil config
+        settings = get_settings()
+        db_config = settings.database # Get DatabaseConfig instance
+
         super().__init__(
             connection_id=kwargs.get("connection_id", "snowflake_default"),
             connection_type="database",
             name="Snowflake Database",
             description="Snowflake data warehouse connection",
-            host=rahil_config.SNOWFLAKE_ACCOUNT,
-            username=rahil_config.SNOWFLAKE_USER,
-            password=rahil_config.SNOWFLAKE_PASSWORD,
-            database=rahil_config.DATABASE_NAME,
+            host=db_config.host,
+            username=db_config.username,
+            password=db_config.password.get_secret_value(), # Extract plain string from SecretStr
+            database=db_config.database,
             **kwargs
         )
         
-        # Snowflake-specific parameters
-        self.account = rahil_config.SNOWFLAKE_ACCOUNT
-        self.warehouse = rahil_config.SNOWFLAKE_WAREHOUSE
-        self.role = rahil_config.SNOWFLAKE_ROLE
-        self.schema = rahil_config.SNOWFLAKE_SCHEMA
+        # Snowflake-specific parameters, now sourced from db_config
+        self.account = db_config.account
+        self.warehouse = db_config.warehouse
+        self.role = db_config.role # Already correctly sourced
+        self.schema = db_config.schema
         
         # Override health check query for Snowflake
         self.health_check_query = "SELECT CURRENT_VERSION()"
@@ -447,7 +449,13 @@ async def get_managed_snowflake_connection():
     Get a managed Snowflake connection compatible with existing rahil/ patterns.
     
     This provides a bridge between the new connection manager and existing code.
+    Ensures that only one instance of SnowflakeConnectionManager (and thus one
+    connection pool) is used throughout the application when accessed via this function.
     """
-    manager = SnowflakeConnectionManager()
-    await manager.initialize()
-    return manager 
+    global _global_snowflake_manager
+    if _global_snowflake_manager is None:
+        async with _manager_lock:
+            if _global_snowflake_manager is None: # Double-check after acquiring lock
+                _global_snowflake_manager = SnowflakeConnectionManager()
+                await _global_snowflake_manager.initialize()
+    return _global_snowflake_manager

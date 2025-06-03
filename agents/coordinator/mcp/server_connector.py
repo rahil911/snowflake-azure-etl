@@ -609,40 +609,51 @@ class MCPServerConnector:
     
     async def initialize_from_config(self) -> None:
         """Initialize MCP servers from configuration."""
-        settings = get_settings()
+        # settings instance is already available via self.settings, initialized in __init__
         
-        # Create Snowflake server config
+        # Snowflake server config from settings
+        snowflake_endpoint = self.settings.MCP_SNOWFLAKE_SERVER_ENDPOINT # Assuming this setting exists
+        snowflake_api_key_secret = self.settings.MCP_SNOWFLAKE_API_KEY # Assuming this setting exists
+        snowflake_api_key = snowflake_api_key_secret.get_secret_value() if snowflake_api_key_secret else None
+
         snowflake_config = MCPServerConfig(
             server_id="snowflake_server",
             name="Snowflake Data Server",
             description="MCP server for Snowflake database operations",
             connection_type=ConnectionType.HTTP,
-            endpoint="http://localhost:8001",  # From Session B
+            endpoint=snowflake_endpoint,
             capabilities={
                 ServerCapability.DATABASE_QUERY,
                 ServerCapability.DATA_DISCOVERY,
                 ServerCapability.ETL_OPERATIONS
             },
-            auth_required=True,
-            api_key=settings.get("SNOWFLAKE_API_KEY"),
-            timeout_seconds=60,
-            max_concurrent_requests=20
+            auth_required=bool(snowflake_api_key),
+            api_key=snowflake_api_key,
+            timeout_seconds=self.settings.MCP_SERVER_DEFAULT_TIMEOUT_SECONDS, # Assuming a general timeout setting
+            max_concurrent_requests=self.settings.MCP_SERVER_DEFAULT_MAX_REQUESTS # Assuming general max requests
         )
         
-        # Create Analytics server config
+        # Analytics server config from settings
+        analytics_endpoint = self.settings.MCP_ANALYTICS_SERVER_ENDPOINT # Assuming this setting exists
+        # Assuming analytics server might also have an API key, add if needed:
+        # analytics_api_key_secret = self.settings.MCP_ANALYTICS_API_KEY
+        # analytics_api_key = analytics_api_key_secret.get_secret_value() if analytics_api_key_secret else None
+
         analytics_config = MCPServerConfig(
             server_id="analytics_server",
             name="Analytics Server",
             description="MCP server for data analytics and insights",
             connection_type=ConnectionType.HTTP,
-            endpoint="http://localhost:8002",  # From Session B
+            endpoint=analytics_endpoint,
             capabilities={
                 ServerCapability.ANALYTICS,
                 ServerCapability.REPORTING,
                 ServerCapability.DATA_DISCOVERY
             },
-            timeout_seconds=120,
-            max_concurrent_requests=15
+            # auth_required=bool(analytics_api_key), # If analytics server needs auth
+            # api_key=analytics_api_key,             # If analytics server needs auth
+            timeout_seconds=self.settings.MCP_SERVER_DEFAULT_TIMEOUT_SECONDS,
+            max_concurrent_requests=self.settings.MCP_SERVER_DEFAULT_MAX_REQUESTS
         )
         
         # Register servers
