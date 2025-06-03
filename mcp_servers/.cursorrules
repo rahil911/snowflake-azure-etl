@@ -1,0 +1,158 @@
+# 🛠️ MCP Servers Architecture - Tool Servers Directory
+
+## 📋 MCP SERVERS OVERVIEW
+This directory contains Model Context Protocol (MCP) server implementations that provide modular tools for our multi-agent system.
+
+## 🎯 MCP SERVER ARCHITECTURE
+
+### Core Principles
+- **Modularity**: Each server provides specific domain functionality
+- **Protocol Compliance**: Follow MCP specification exactly
+- **Extensibility**: Easy to add new tools and capabilities
+- **Error Resilience**: Graceful handling of failures
+- **Performance**: Efficient tool execution and resource management
+
+### Server Types
+1. **Snowflake Server** (`snowflake_server/`)
+   - Database connection and query execution
+   - ETL pipeline monitoring and control
+   - Data quality checks and validation
+   - Schema introspection and analysis
+
+2. **Analytics Server** (`analytics_server/`)
+   - Statistical analysis and calculations
+   - Data transformation and aggregation
+   - Machine learning model inference
+   - Business intelligence computations
+
+3. **Visualization Server** (`visualization_server/`) [Future]
+   - Chart and graph generation
+   - Dashboard creation and rendering
+   - Interactive visualization components
+   - Export capabilities (PNG, SVG, PDF)
+
+## 🔧 IMPLEMENTATION GUIDELINES
+
+### MCP Server Base Structure
+```python
+from mcp.server.fastmcp import FastMCP
+from mcp.server.models import InitializationOptions
+import mcp.types as types
+
+class BaseMCPServer:
+    def __init__(self, name: str, description: str):
+        self.name = name
+        self.description = description
+        self.server = FastMCP(name)
+        self._setup_tools()
+    
+    def _setup_tools(self):
+        # Register tools specific to this server
+        pass
+    
+    async def run(self, transport: str = "stdio"):
+        await self.server.run(transport=transport)
+```
+
+### Tool Implementation Pattern
+```python
+@server.tool()
+async def example_tool(param1: str, param2: int) -> dict:
+    """Tool description for the LLM to understand usage."""
+    try:
+        # Tool implementation
+        result = perform_operation(param1, param2)
+        return {
+            "success": True,
+            "data": result,
+            "message": "Operation completed successfully"
+        }
+    except Exception as e:
+        return {
+            "success": False,
+            "error": str(e),
+            "message": "Operation failed"
+        }
+```
+
+### Resource Implementation Pattern
+```python
+@server.resource("data://{resource_id}")
+async def get_data_resource(resource_id: str) -> str:
+    """Provide access to data resources."""
+    try:
+        data = fetch_resource(resource_id)
+        return data
+    except Exception as e:
+        return f"Error fetching resource {resource_id}: {str(e)}"
+```
+
+## 🗄️ SNOWFLAKE SERVER SPECIFICATIONS
+
+### Tools
+- `execute_query`: Run SQL queries against Snowflake
+- `get_schema`: Retrieve table schemas and metadata
+- `check_data_quality`: Validate data integrity
+- `monitor_etl`: Check ETL pipeline status
+- `get_table_stats`: Retrieve table statistics
+
+### Resources
+- `schema://{database}/{schema}`: Database schema information
+- `table://{database}/{schema}/{table}`: Table structure and metadata
+- `pipeline://{pipeline_id}`: ETL pipeline status and logs
+
+## 📊 ANALYTICS SERVER SPECIFICATIONS
+
+### Tools
+- `calculate_statistics`: Compute statistical measures
+- `perform_aggregation`: Data grouping and aggregation
+- `run_analysis`: Execute analytical computations
+- `generate_insights`: Create business intelligence insights
+- `validate_data`: Data validation and quality checks
+
+### Resources
+- `analysis://{analysis_id}`: Stored analysis results
+- `metrics://{metric_name}`: Business metrics and KPIs
+- `insights://{insight_id}`: Generated business insights
+
+## 🚀 DEVELOPMENT WORKFLOW
+
+### Server Development
+1. Create server directory structure
+2. Implement BaseMCPServer interface
+3. Define tools and resources
+4. Add comprehensive error handling
+5. Implement logging and monitoring
+
+### Testing Strategy
+- Unit tests for each tool function
+- Integration tests with actual services
+- Mock external dependencies for isolated testing
+- Performance testing for resource-intensive operations
+
+### Deployment
+- Each server runs as independent process
+- Support for different transport protocols (stdio, HTTP)
+- Configuration management
+- Health checks and monitoring
+
+## 📝 CURRENT STATUS
+- ✅ Architecture design complete
+- 🔄 Snowflake server base implementation
+- ⏳ Analytics server development
+- ⏳ Tool integration testing
+- ⏳ Resource implementation
+
+## 🎯 NEXT STEPS
+1. Implement Snowflake MCP server with basic tools
+2. Create analytics server with statistical functions
+3. Add comprehensive error handling and logging
+4. Develop testing framework for MCP servers
+5. Create deployment and monitoring setup
+
+## 🔒 SECURITY CONSIDERATIONS
+- Secure credential management
+- Input validation and sanitization
+- Rate limiting for resource-intensive operations
+- Audit logging for all database operations
+- Connection pooling and resource management 

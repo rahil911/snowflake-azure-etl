@@ -1,0 +1,17 @@
+-- 4. PRODUCT
+CREATE OR REPLACE TABLE STAGING_PRODUCT (
+  PRODUCTID            INTEGER,
+  PRODUCTTYPEID        INTEGER,
+  PRODUCT              VARCHAR,
+  COLOR                VARCHAR,
+  STYLE                VARCHAR,
+  UNITOFMEASUREID      INTEGER,
+  WEIGHT               VARCHAR,
+  PRICE                VARCHAR,
+  COST                 VARCHAR,
+  CREATEDDATE          VARCHAR,
+  CREATEDBY            VARCHAR,
+  MODIFIEDDATE         VARCHAR,
+  MODIFIEDBY           VARCHAR,
+  WHOLESALEPRICE       VARCHAR
+); 

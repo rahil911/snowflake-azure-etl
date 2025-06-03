@@ -1,0 +1,118 @@
+# 🤖 Enterprise Multi-Agent Data Intelligence Platform - Project Management Dashboard
+
+## 📋 PROJECT OVERVIEW
+Building an enterprise-grade conversational data-driven decision intelligence platform using Google ADK, Gemini 2.0 with native audio, and modular multi-agent architecture.
+
+## 🎯 SYSTEM ARCHITECTURE VISION
+- **Multi-Agent System**: Using Google ADK for agent orchestration
+- **Native Audio**: Gemini 2.0 multimodal Live API for voice conversations  
+- **Modular Design**: Extensible agents with MCP servers as tools
+- **Data Intelligence**: ETL-driven insights for business decision making
+- **Communication Protocol**: Model bus for inter-agent communication
+- **Future Extensions**: Visualization tools, additional databases, more agents
+
+## 📊 PROJECT STATUS & ROADMAP
+
+### ✅ COMPLETED
+- [x] Existing ETL pipeline with Snowflake & Azure Blob Storage
+- [x] Dimensional model with staging, dimension, and fact tables
+- [x] Initial research on Google ADK and Gemini 2.0 capabilities
+- [x] **STEP 1**: Dependencies & Context Gathering
+  - [x] Research Google GenAI SDK (replaced deprecated google-generativeai)
+  - [x] Research Gemini 2.0 native audio/multimodal capabilities
+  - [x] Research Model Context Protocol (MCP) for tool servers
+  - [x] Install essential dependencies (google-genai, langchain, etc.)
+  - [x] Review existing ETL architecture and data schema
+  - [x] Document current database connections and table structures
+  - [x] Project structure creation with proper agent/server separation
+
+### 🔄 CURRENT PHASE: Base Implementation
+- [ ] **STEP 2**: Core Architecture Implementation
+  - [x] Design multi-agent system architecture
+  - [x] Define agent roles and responsibilities (Coordinator, Data Intelligence, ETL)
+  - [x] Plan MCP server structure for tools (Snowflake, Analytics, Visualization)
+  - [x] Design model bus communication protocol
+  - [ ] Implement shared schemas and data models
+  - [ ] Create base agent abstract class
+  - [ ] Implement basic MCP server framework
+  - [ ] Setup configuration management system
+
+### 🚀 UPCOMING PHASES
+- [ ] **PHASE 2**: Base Agent Implementation
+- [ ] **PHASE 3**: Data Intelligence Agents
+- [ ] **PHASE 4**: Audio Interface Integration
+- [ ] **PHASE 5**: Visualization Tools
+- [ ] **PHASE 6**: Production Deployment
+
+## 🏗️ TECHNICAL STACK
+- **LLM SDK**: Google GenAI SDK (unified interface for Gemini 2.0+)
+- **LLM**: Gemini 2.0 Flash with multimodal Live API and native audio
+- **Agent Framework**: LangChain + Custom multi-agent orchestration
+- **Tool Protocol**: Model Context Protocol (MCP) servers
+- **Database**: Snowflake (existing ETL data)
+- **Storage**: Azure Blob Storage
+- **Communication**: Model bus protocol for inter-agent messaging
+- **Language**: Python 3.9+ (primary), with modular tool servers
+- **Embeddings**: FastEmbed for vector operations
+- **Audio**: Native Gemini 2.0 voice conversation capabilities
+
+### Key Dependencies
+- `google-genai>=1.16.0` - Official Google GenAI SDK
+- `langchain>=0.3.25` - Multi-agent coordination framework
+- `langchain-google-genai>=2.1.5` - Gemini integration
+- `fastembed>=0.7.0` - Embedding models
+- `pydantic>=2.0.0` - Data validation and schemas
+- `snowflake-connector-python>=3.6.0` - Database connectivity
+
+### Future Upgrades
+- **MCP SDK**: Will be added when upgrading to Python 3.10+ (MCP requires >=3.10)
+- **Google ADK**: Monitor for official release and integration
+
+## 📁 PROJECT STRUCTURE
+```
+STAGING_ETL/
+├── agents/                    # Multi-agent system (NEW)
+│   ├── coordinator/          # Main orchestrator agent
+│   ├── data_intelligence/    # Business intelligence agent
+│   ├── etl_agent/           # ETL operations agent
+│   └── visualization/       # Future visualization agent
+├── mcp_servers/             # Tool servers following MCP protocol
+│   ├── snowflake_server/    # Database operations
+│   ├── analytics_server/    # Data analysis tools
+│   └── visualization_server/ # Future visualization tools
+├── shared/                  # Common utilities and protocols
+│   ├── model_bus/          # Inter-agent communication
+│   ├── schemas/            # Data schemas and validation
+│   └── config/             # Configuration management
+└── rahil/                  # Existing ETL pipeline
+```
+
+## 🎯 AGENT DESIGN PRINCIPLES
+1. **Modularity**: Each agent has specific, well-defined responsibilities
+2. **Extensibility**: Easy to add new agents and capabilities
+3. **Communication**: Clear protocols for inter-agent messaging
+4. **Context Awareness**: Agents maintain context across conversations
+5. **Safety**: Proper error handling and fallback mechanisms
+6. **Auditability**: Full logging and traceability of decisions
+
+## 🔧 DEVELOPMENT GUIDELINES
+- Use Google ADK's hierarchical agent structure
+- Implement MCP protocol for tool servers
+- Follow agentic coding principles
+- Create cursor rules in each agent folder for context management
+- Maintain backward compatibility with existing ETL system
+- Document all agent interactions and decision flows
+
+## 🚦 CURRENT FOCUS
+**Research Phase**: Understanding Google ADK capabilities, Gemini 2.0 multimodal features, and designing the overall system architecture before implementation begins.
+
+## 📝 STEP-BY-STEP EXECUTION
+Each step will be completed with:
+1. Resource gathering and research
+2. Dependencies installation
+3. Implementation with proper documentation
+4. Testing and validation
+5. Integration with existing systems
+6. Documentation update
+
+This project will demonstrate enterprise-grade agentic AI capabilities for data-driven decision intelligence. 

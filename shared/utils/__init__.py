@@ -1,0 +1,238 @@
+"""
+Shared utilities for the multi-agent data intelligence platform.
+
+This module provides comprehensive utilities including data processing,
+validation, caching, retry logic, metrics collection, and inter-agent communication.
+"""
+
+from .data_processing import (
+    DataProcessor,
+    DataValidator, 
+    DataTransformer,
+    DataAggregator,
+    process_data_batch,
+    validate_data_quality,
+    transform_data_pipeline,
+    aggregate_metrics,
+    create_data_processor,
+    format_currency,
+    format_percentage,
+    safe_divide,
+    parse_date_flexible,
+    normalize_string,
+    DataProcessingError,
+    TransformationError,
+    AggregationError
+)
+
+from .caching import (
+    CacheManager,
+    InMemoryCache,
+    RedisCache,
+    MultiLevelCache,
+    cache_result,
+    cached,
+    timed_cache,
+    invalidate_cache,
+    cache_key_builder,
+    get_cache_manager,
+    CacheEntry,
+    CacheStats,
+    CacheConfig,
+    CacheError,
+    CacheKeyError,
+    CacheMissError
+)
+
+from .validation import (
+    DataQualityValidator,
+    InputSanitizer,
+    SQLValidator,
+    validate_input,
+    sanitize_input,
+    validate_sql_query,
+    validate_email,
+    validate_phone,
+    validate_ip_address,
+    validate_json,
+    check_data_quality,
+    sanitize_sql_identifier,
+    ValidationError,
+    SecurityValidationError,
+    DataQualityError,
+    SQLValidationError,
+    SanitizationError
+)
+
+from .retry import (
+    RetryManager,
+    RetryConfig,
+    RetryStrategy,
+    CircuitBreaker,
+    RetryAttempt,
+    retry_with_backoff,
+    exponential_backoff,
+    retry_on_exception,
+    with_retry,
+    create_retry_config,
+    database_retry,
+    api_retry,
+    file_operation_retry,
+    RetryError,
+    RetryableError,
+    RetryableConnectionError,
+    RetryableTimeoutError,
+    RetryableServiceError
+)
+
+from .metrics import (
+    MetricsCollector,
+    Counter,
+    Gauge,
+    Histogram,
+    Timer,
+    MetricSample,
+    MetricType,
+    PerformanceProfiler,
+    get_metrics_collector,
+    get_profiler,
+    counter,
+    gauge,
+    histogram,
+    timer,
+    record_metric,
+    track_performance,
+    measure_time,
+    count_calls,
+    get_system_metrics
+)
+
+from .model_bus import (
+    MessageBus,
+    AgentBusInterface,
+    MessageFilter,
+    MessageEnvelope,
+    MessageStatus,
+    BusEvent,
+    BusEventType,
+    Subscription,
+    get_message_bus,
+    send_message,
+    subscribe,
+    subscribe_to_routing_key
+)
+
+__all__ = [
+    # Data processing
+    'DataProcessor',
+    'DataValidator',
+    'DataTransformer', 
+    'DataAggregator',
+    'process_data_batch',
+    'validate_data_quality',
+    'transform_data_pipeline',
+    'aggregate_metrics',
+    'create_data_processor',
+    'format_currency',
+    'format_percentage',
+    'safe_divide',
+    'parse_date_flexible',
+    'normalize_string',
+    'DataProcessingError',
+    'TransformationError',
+    'AggregationError',
+    
+    # Caching
+    'CacheManager',
+    'InMemoryCache',
+    'RedisCache',
+    'MultiLevelCache',
+    'cache_result',
+    'cached',
+    'timed_cache',
+    'invalidate_cache',
+    'cache_key_builder',
+    'get_cache_manager',
+    'CacheEntry',
+    'CacheStats',
+    'CacheConfig',
+    'CacheError',
+    'CacheKeyError',
+    'CacheMissError',
+    
+    # Validation
+    'DataQualityValidator',
+    'InputSanitizer',
+    'SQLValidator',
+    'validate_input',
+    'sanitize_input',
+    'validate_sql_query',
+    'validate_email',
+    'validate_phone',
+    'validate_ip_address',
+    'validate_json',
+    'check_data_quality',
+    'sanitize_sql_identifier',
+    'ValidationError',
+    'SecurityValidationError',
+    'DataQualityError',
+    'SQLValidationError',
+    'SanitizationError',
+    
+    # Retry logic
+    'RetryManager',
+    'RetryConfig',
+    'RetryStrategy',
+    'CircuitBreaker',
+    'RetryAttempt',
+    'retry_with_backoff',
+    'exponential_backoff',
+    'retry_on_exception',
+    'with_retry',
+    'create_retry_config',
+    'database_retry',
+    'api_retry',
+    'file_operation_retry',
+    'RetryError',
+    'RetryableError',
+    'RetryableConnectionError',
+    'RetryableTimeoutError',
+    'RetryableServiceError',
+    
+    # Metrics and monitoring
+    'MetricsCollector',
+    'Counter',
+    'Gauge',
+    'Histogram',
+    'Timer',
+    'MetricSample',
+    'MetricType',
+    'PerformanceProfiler',
+    'get_metrics_collector',
+    'get_profiler',
+    'counter',
+    'gauge',
+    'histogram',
+    'timer',
+    'record_metric',
+    'track_performance',
+    'measure_time',
+    'count_calls',
+    'get_system_metrics',
+    
+    # Message bus
+    'MessageBus',
+    'AgentBusInterface',
+    'MessageFilter',
+    'MessageEnvelope',
+    'MessageStatus',
+    'BusEvent',
+    'BusEventType',
+    'Subscription',
+    'get_message_bus',
+    'send_message',
+    'subscribe',
+    'subscribe_to_routing_key'
+]
+
+__version__ = '1.0.0' 

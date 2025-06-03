@@ -1,0 +1,116 @@
+# 🤖 Multi-Agent System Architecture - Agents Directory
+
+## 📋 AGENTS OVERVIEW
+This directory contains the core agent implementations for our enterprise data intelligence platform using Google ADK and Gemini 2.0.
+
+## 🎯 AGENT ARCHITECTURE PRINCIPLES
+
+### Core Components
+- **Agent Base Class**: Common interface for all agents
+- **Communication**: Model bus protocol for inter-agent messaging
+- **Tool Integration**: MCP servers as modular tools
+- **Context Management**: Shared context across agent interactions
+- **Error Handling**: Robust fallback mechanisms
+
+### Agent Types
+1. **Coordinator Agent** (`coordinator/`)
+   - Orchestrates multi-agent workflows
+   - Route requests to appropriate specialized agents
+   - Manages conversation state and context
+   - Handles user interactions and responses
+
+2. **Data Intelligence Agent** (`data_intelligence/`)
+   - Analyzes business data and generates insights
+   - Answers data-driven questions
+   - Performs ETL data analysis
+   - Creates business intelligence reports
+
+3. **ETL Agent** (`etl_agent/`)
+   - Manages ETL pipeline operations
+   - Monitors data quality and processes
+   - Handles data transformations
+   - Coordinates with Snowflake operations
+
+4. **Visualization Agent** (`visualization/`) [Future]
+   - Generates data visualizations
+   - Creates charts, graphs, and dashboards
+   - Selects appropriate visualization types
+   - Renders interactive visual elements
+
+## 🔧 IMPLEMENTATION GUIDELINES
+
+### Agent Interface
+```python
+from abc import ABC, abstractmethod
+from typing import Any, Dict, List, Optional
+from shared.model_bus import ModelBus
+from shared.schemas import AgentMessage, AgentResponse
+
+class BaseAgent(ABC):
+    def __init__(self, name: str, description: str, mcp_servers: List[str]):
+        self.name = name
+        self.description = description
+        self.mcp_servers = mcp_servers
+        self.model_bus = ModelBus()
+    
+    @abstractmethod
+    async def process_message(self, message: AgentMessage) -> AgentResponse:
+        pass
+    
+    @abstractmethod
+    async def get_capabilities(self) -> Dict[str, Any]:
+        pass
+```
+
+### Communication Protocol
+- All agents communicate via the shared model bus
+- Messages follow standardized AgentMessage schema
+- Responses use AgentResponse schema with structured outputs
+- Support for both synchronous and asynchronous communication
+
+### Tool Integration
+- Each agent connects to specific MCP servers
+- Tools are dynamically loaded based on agent requirements
+- Graceful fallback when tools are unavailable
+- Proper error handling and logging
+
+### Context Management
+- Maintain conversation history and state
+- Share relevant context between agents
+- Handle context serialization/deserialization
+- Implement context cleanup policies
+
+## 🚀 DEVELOPMENT WORKFLOW
+
+1. **Agent Development**
+   - Inherit from BaseAgent
+   - Implement required abstract methods
+   - Define agent-specific MCP server requirements
+   - Add comprehensive logging and error handling
+
+2. **Testing Strategy**
+   - Unit tests for individual agent functionality
+   - Integration tests for agent communication
+   - Mock MCP servers for isolated testing
+   - End-to-end workflow testing
+
+3. **Deployment Considerations**
+   - Each agent can run as independent service
+   - Support for horizontal scaling
+   - Health checks and monitoring
+   - Graceful shutdown procedures
+
+## 📝 CURRENT STATUS
+- ✅ Architecture design complete
+- 🔄 Base agent class implementation
+- 🔄 Coordinator agent development
+- ⏳ Data intelligence agent
+- ⏳ ETL agent
+- ⏳ Model bus implementation
+
+## 🎯 NEXT STEPS
+1. Implement BaseAgent abstract class
+2. Create coordinator agent with basic orchestration
+3. Develop data intelligence agent with Snowflake integration
+4. Build ETL monitoring and management capabilities
+5. Add comprehensive testing suite 

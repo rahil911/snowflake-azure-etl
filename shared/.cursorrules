@@ -1,0 +1,295 @@
+# 🔗 Shared Components Architecture - Common Utilities
+
+## 📋 SHARED COMPONENTS OVERVIEW
+This directory contains shared utilities, schemas, and communication protocols used across all agents and MCP servers in our multi-agent system.
+
+## 🎯 ARCHITECTURE PRINCIPLES
+
+### Core Components
+- **Model Bus**: Inter-agent communication protocol
+- **Schemas**: Data structure definitions and validation
+- **Config**: Centralized configuration management
+- **Common Utilities**: Shared functionality across components
+
+## 📡 MODEL BUS (`model_bus/`)
+
+### Purpose
+Standardized communication protocol for agent-to-agent messaging, ensuring consistent data flow and error handling across the entire system.
+
+### Features
+- **Asynchronous Messaging**: Non-blocking communication between agents
+- **Message Routing**: Intelligent routing based on agent capabilities
+- **Error Handling**: Robust error propagation and recovery
+- **Context Preservation**: Maintain conversation context across agents
+- **Load Balancing**: Distribute requests across agent instances
+
+### Implementation Structure
+```python
+# model_bus/bus.py
+from abc import ABC, abstractmethod
+from typing import Any, Dict, List, Optional
+from asyncio import Queue
+import asyncio
+
+class MessageBus(ABC):
+    @abstractmethod
+    async def publish(self, message: AgentMessage) -> None:
+        pass
+    
+    @abstractmethod
+    async def subscribe(self, agent_id: str, callback: callable) -> None:
+        pass
+    
+    @abstractmethod
+    async def route_message(self, message: AgentMessage) -> AgentResponse:
+        pass
+
+class LocalMessageBus(MessageBus):
+    def __init__(self):
+        self.subscribers: Dict[str, callable] = {}
+        self.message_queue: Queue = Queue()
+    
+    async def publish(self, message: AgentMessage) -> None:
+        await self.message_queue.put(message)
+    
+    async def route_message(self, message: AgentMessage) -> AgentResponse:
+        # Route to appropriate agent based on message type and content
+        pass
+```
+
+## 📊 SCHEMAS (`schemas/`)
+
+### Purpose
+Unified data structures and validation schemas for all system components.
+
+### Schema Categories
+
+#### Agent Communication
+```python
+# schemas/agent_schemas.py
+from pydantic import BaseModel
+from typing import Any, Dict, List, Optional
+from enum import Enum
+
+class MessageType(Enum):
+    QUERY = "query"
+    RESPONSE = "response"
+    ERROR = "error"
+    SYSTEM = "system"
+
+class AgentMessage(BaseModel):
+    message_id: str
+    sender_agent: str
+    target_agent: Optional[str] = None
+    message_type: MessageType
+    content: str
+    context: Dict[str, Any] = {}
+    timestamp: datetime
+    priority: int = 0
+
+class AgentResponse(BaseModel):
+    response_id: str
+    original_message_id: str
+    responding_agent: str
+    success: bool
+    content: str
+    data: Optional[Dict[str, Any]] = None
+    error_message: Optional[str] = None
+    execution_time: float
+    timestamp: datetime
+```
+
+#### Data Schemas
+```python
+# schemas/data_schemas.py
+class ETLPipelineStatus(BaseModel):
+    pipeline_id: str
+    status: str
+    start_time: datetime
+    end_time: Optional[datetime] = None
+    processed_records: int
+    error_count: int
+    warnings: List[str] = []
+
+class DataQualityReport(BaseModel):
+    table_name: str
+    total_records: int
+    null_count: int
+    duplicate_count: int
+    quality_score: float
+    issues: List[str] = []
+    timestamp: datetime
+```
+
+#### Tool Schemas
+```python
+# schemas/tool_schemas.py
+class ToolCall(BaseModel):
+    tool_name: str
+    parameters: Dict[str, Any]
+    expected_output_type: str
+
+class ToolResponse(BaseModel):
+    tool_name: str
+    success: bool
+    result: Any
+    error_message: Optional[str] = None
+    execution_time: float
+```
+
+## ⚙️ CONFIG (`config/`)
+
+### Purpose
+Centralized configuration management for all system components.
+
+### Configuration Structure
+```python
+# config/base_config.py
+from pydantic import BaseSettings
+from typing import Dict, List, Optional
+
+class DatabaseConfig(BaseSettings):
+    snowflake_account: str
+    snowflake_user: str
+    snowflake_password: str
+    snowflake_warehouse: str
+    snowflake_database: str
+    snowflake_schema: str
+
+class AgentConfig(BaseSettings):
+    agent_name: str
+    description: str
+    mcp_servers: List[str]
+    max_retries: int = 3
+    timeout_seconds: int = 30
+
+class SystemConfig(BaseSettings):
+    log_level: str = "INFO"
+    max_concurrent_agents: int = 10
+    message_bus_type: str = "local"
+    enable_audio: bool = True
+    gemini_model: str = "gemini-2.0-flash-001"
+    
+    class Config:
+        env_file = ".env"
+```
+
+### Environment Management
+- Development, staging, and production configurations
+- Secure credential management
+- Feature flags and toggles
+- Performance tuning parameters
+
+## 🔧 COMMON UTILITIES
+
+### Logging and Monitoring
+```python
+# utils/logging.py
+import logging
+from loguru import logger
+from typing import Any, Dict
+
+class StructuredLogger:
+    def __init__(self, component_name: str):
+        self.component_name = component_name
+    
+    def log_agent_interaction(self, agent_name: str, action: str, data: Dict[str, Any]):
+        logger.info(
+            f"Agent Interaction",
+            component=self.component_name,
+            agent=agent_name,
+            action=action,
+            data=data
+        )
+    
+    def log_tool_execution(self, tool_name: str, parameters: Dict[str, Any], result: Any):
+        logger.info(
+            f"Tool Execution",
+            component=self.component_name,
+            tool=tool_name,
+            parameters=parameters,
+            result=result
+        )
+```
+
+### Error Handling
+```python
+# utils/error_handling.py
+from typing import Any, Optional
+import traceback
+
+class AgentError(Exception):
+    def __init__(self, message: str, agent_name: str, error_code: str):
+        self.message = message
+        self.agent_name = agent_name
+        self.error_code = error_code
+        super().__init__(message)
+
+class ErrorHandler:
+    @staticmethod
+    def handle_tool_error(tool_name: str, error: Exception) -> Dict[str, Any]:
+        return {
+            "success": False,
+            "error_type": type(error).__name__,
+            "error_message": str(error),
+            "tool_name": tool_name,
+            "traceback": traceback.format_exc()
+        }
+```
+
+### Performance Monitoring
+```python
+# utils/performance.py
+import time
+from typing import Any, Callable
+from functools import wraps
+
+def measure_execution_time(func: Callable) -> Callable:
+    @wraps(func)
+    async def wrapper(*args, **kwargs) -> Any:
+        start_time = time.time()
+        try:
+            result = await func(*args, **kwargs)
+            execution_time = time.time() - start_time
+            logger.info(f"Function {func.__name__} executed in {execution_time:.2f}s")
+            return result
+        except Exception as e:
+            execution_time = time.time() - start_time
+            logger.error(f"Function {func.__name__} failed after {execution_time:.2f}s: {str(e)}")
+            raise
+    return wrapper
+```
+
+## 🚀 DEVELOPMENT GUIDELINES
+
+### Schema Development
+- Use Pydantic for all data validation
+- Include comprehensive docstrings
+- Implement proper error messages
+- Add version compatibility checks
+
+### Configuration Management
+- Use environment variables for secrets
+- Implement configuration validation
+- Support multiple deployment environments
+- Include configuration migration strategies
+
+### Utility Functions
+- Make functions stateless where possible
+- Include comprehensive error handling
+- Add proper logging and monitoring
+- Write comprehensive unit tests
+
+## 📝 CURRENT STATUS
+- ✅ Architecture design complete
+- 🔄 Base schema implementations
+- 🔄 Configuration management setup
+- ⏳ Model bus implementation
+- ⏳ Utility function development
+
+## 🎯 NEXT STEPS
+1. Implement core agent communication schemas
+2. Create model bus for inter-agent messaging
+3. Setup configuration management system
+4. Develop common utility functions
+5. Add comprehensive testing framework 
